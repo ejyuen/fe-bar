@@ -1,0 +1,424 @@
+================================================================================
+[2026-11-17T18:51:02Z] Phase 1 - validate
+$ databricks bundle validate
+Name: matter-intelligence
+Target: dev
+Workspace:
+  Host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+  User: erica.yuen@databricks.com
+  Path: /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev
+
+Validation OK!
+[2026-11-17T18:51:05Z] exit code: 0
+================================================================================
+[2026-11-17T18:51:11Z] Phase 1 - deploy
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-17T18:51:59Z] exit code: 0
+================================================================================
+[2026-11-17T18:52:06Z] Phase 1 - run setup_job (download, synthetic, governance pre)
+$ databricks bundle run setup_job --only download_cuad,generate_synthetic,uc_governance_pre
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/41979370681717
+
+2026-11-17 13:52:08 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 14:22:57 "[dev erica_yuen] matter-intelligence-setup" TERMINATED CANCELED Run cancelled by user
+Error: run canceled: Run cancelled by user
+[2026-11-17T19:22:57Z] exit code: 1
+[note] previous setup_job run 41979370681717 cancelled: serverless compute was failing to launch (INTERNAL_ERROR: UNAVAILABLE); retrying after warehouse recovered
+================================================================================
+[2026-11-17T19:41:16Z] Phase 1 - run setup_job (download, synthetic, governance pre) - retry
+$ databricks bundle run setup_job --only download_cuad,generate_synthetic,uc_governance_pre
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/804018819646846
+
+2026-11-17 14:41:18 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 14:45:19 "[dev erica_yuen] matter-intelligence-setup" INTERNAL_ERROR FAILED Task uc_governance_pre failed with message: Workload failed, see run output for details. This caused all downstream tasks to get skipped.
+Task uc_governance_pre FAILED:
+NameError: name '__file__' is not defined
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+File [0;32m~/.ipykernel/18011/command--1-1540886554:9[0m
+[1;32m      6[0m [38;5;28;01mdel[39;00m sys
+[1;32m      8[0m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(filename, [38;5;124m"[39m[38;5;124mrb[39m[38;5;124m"[39m) [38;5;28;01mas[39;00m f:
+[0;32m----> 9[0m   exec([38;5;28mcompile[39m(f[38;5;241m.[39mread(), filename, [38;5;124m'[39m[38;5;124mexec[39m[38;5;124m'[39m))
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:76[0m
+[1;32m     72[0m         sys[38;5;241m.[39mexit([38;5;124m"[39m[38;5;124mOne or more required statements failed[39m[38;5;124m"[39m)
+[1;32m     75[0m [38;5;28;01mif[39;00m [38;5;18m__name__[39m [38;5;241m==[39m [38;5;124m"[39m[38;5;124m__main__[39m[38;5;124m"[39m:
+[0;32m---> 76[0m     main()
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:52[0m, in [0;36mmain[0;34m()[0m
+[1;32m     50[0m a [38;5;241m=[39m ap[38;5;241m.[39mparse_args()
+[1;32m     51[0m spark [38;5;241m=[39m SparkSession[38;5;241m.[39mbuilder[38;5;241m.[39mgetOrCreate()
+[0;32m---> 52[0m here [38;5;241m=[39m os[38;5;241m.[39mpath[38;5;241m.[39mdirname(os[38;5;241m.[39mpath[38;5;241m.[39mabspath([38;5;18m__file__[39m))
+[1;32m     53[0m text [38;5;241m=[39m [38;5;28mopen[39m(os[38;5;241m.[39mpath[38;5;241m.[39mjoin(here, a[38;5;241m.[39mfile))[38;5;241m.[39mread()[38;5;241m.[39mreplace([38;5;124m"[39m[38;5;124m$[39m[38;5;132;01m{catalog}[39;00m[38;5;124m"[39m, a[38;5;241m.[39mcatalog)
+[1;32m     54[0m stmts [38;5;241m=[39m split_statements(parse_sections(text)[a[38;5;241m.[39msection])
+
+[0;31mNameError[0m: name '__file__' is not defined
+
+Error: Task uc_governance_pre failed!
+Error:
+NameError: name '__file__' is not defined
+Trace:
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+File [0;32m~/.ipykernel/18011/command--1-1540886554:9[0m
+[1;32m      6[0m [38;5;28;01mdel[39;00m sys
+[1;32m      8[0m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(filename, [38;5;124m"[39m[38;5;124mrb[39m[38;5;124m"[39m) [38;5;28;01mas[39;00m f:
+[0;32m----> 9[0m   exec([38;5;28mcompile[39m(f[38;5;241m.[39mread(), filename, [38;5;124m'[39m[38;5;124mexec[39m[38;5;124m'[39m))
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:76[0m
+[1;32m     72[0m         sys[38;5;241m.[39mexit([38;5;124m"[39m[38;5;124mOne or more required statements failed[39m[38;5;124m"[39m)
+[1;32m     75[0m [38;5;28;01mif[39;00m [38;5;18m__name__[39m [38;5;241m==[39m [38;5;124m"[39m[38;5;124m__main__[39m[38;5;124m"[39m:
+[0;32m---> 76[0m     main()
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:52[0m, in [0;36mmain[0;34m()[0m
+[1;32m     50[0m a [38;5;241m=[39m ap[38;5;241m.[39mparse_args()
+[1;32m     51[0m spark [38;5;241m=[39m SparkSession[38;5;241m.[39mbuilder[38;5;241m.[39mgetOrCreate()
+[0;32m---> 52[0m here [38;5;241m=[39m os[38;5;241m.[39mpath[38;5;241m.[39mdirname(os[38;5;241m.[39mpath[38;5;241m.[39mabspath([38;5;18m__file__[39m))
+[1;32m     53[0m text [38;5;241m=[39m [38;5;28mopen[39m(os[38;5;241m.[39mpath[38;5;241m.[39mjoin(here, a[38;5;241m.[39mfile))[38;5;241m.[39mread()[38;5;241m.[39mreplace([38;5;124m"[39m[38;5;124m$[39m[38;5;132;01m{catalog}[39;00m[38;5;124m"[39m, a[38;5;241m.[39mcatalog)
+[1;32m     54[0m stmts [38;5;241m=[39m split_statements(parse_sections(text)[a[38;5;241m.[39msection])
+
+[0;31mNameError[0m: name '__file__' is not defined
+Task uc_governance_pre FAILED:
+NameError: name '__file__' is not defined
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+File [0;32m~/.ipykernel/27001/command--1-1540886554:9[0m
+[1;32m      6[0m [38;5;28;01mdel[39;00m sys
+[1;32m      8[0m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(filename, [38;5;124m"[39m[38;5;124mrb[39m[38;5;124m"[39m) [38;5;28;01mas[39;00m f:
+[0;32m----> 9[0m   exec([38;5;28mcompile[39m(f[38;5;241m.[39mread(), filename, [38;5;124m'[39m[38;5;124mexec[39m[38;5;124m'[39m))
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:76[0m
+[1;32m     72[0m         sys[38;5;241m.[39mexit([38;5;124m"[39m[38;5;124mOne or more required statements failed[39m[38;5;124m"[39m)
+[1;32m     75[0m [38;5;28;01mif[39;00m [38;5;18m__name__[39m [38;5;241m==[39m [38;5;124m"[39m[38;5;124m__main__[39m[38;5;124m"[39m:
+[0;32m---> 76[0m     main()
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:52[0m, in [0;36mmain[0;34m()[0m
+[1;32m     50[0m a [38;5;241m=[39m ap[38;5;241m.[39mparse_args()
+[1;32m     51[0m spark [38;5;241m=[39m SparkSession[38;5;241m.[39mbuilder[38;5;241m.[39mgetOrCreate()
+[0;32m---> 52[0m here [38;5;241m=[39m os[38;5;241m.[39mpath[38;5;241m.[39mdirname(os[38;5;241m.[39mpath[38;5;241m.[39mabspath([38;5;18m__file__[39m))
+[1;32m     53[0m text [38;5;241m=[39m [38;5;28mopen[39m(os[38;5;241m.[39mpath[38;5;241m.[39mjoin(here, a[38;5;241m.[39mfile))[38;5;241m.[39mread()[38;5;241m.[39mreplace([38;5;124m"[39m[38;5;124m$[39m[38;5;132;01m{catalog}[39;00m[38;5;124m"[39m, a[38;5;241m.[39mcatalog)
+[1;32m     54[0m stmts [38;5;241m=[39m split_statements(parse_sections(text)[a[38;5;241m.[39msection])
+
+[0;31mNameError[0m: name '__file__' is not defined
+
+Error: Task uc_governance_pre failed!
+Error:
+NameError: name '__file__' is not defined
+Trace:
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+File [0;32m~/.ipykernel/27001/command--1-1540886554:9[0m
+[1;32m      6[0m [38;5;28;01mdel[39;00m sys
+[1;32m      8[0m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(filename, [38;5;124m"[39m[38;5;124mrb[39m[38;5;124m"[39m) [38;5;28;01mas[39;00m f:
+[0;32m----> 9[0m   exec([38;5;28mcompile[39m(f[38;5;241m.[39mread(), filename, [38;5;124m'[39m[38;5;124mexec[39m[38;5;124m'[39m))
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:76[0m
+[1;32m     72[0m         sys[38;5;241m.[39mexit([38;5;124m"[39m[38;5;124mOne or more required statements failed[39m[38;5;124m"[39m)
+[1;32m     75[0m [38;5;28;01mif[39;00m [38;5;18m__name__[39m [38;5;241m==[39m [38;5;124m"[39m[38;5;124m__main__[39m[38;5;124m"[39m:
+[0;32m---> 76[0m     main()
+
+File [0;32m/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:52[0m, in [0;36mmain[0;34m()[0m
+[1;32m     50[0m a [38;5;241m=[39m ap[38;5;241m.[39mparse_args()
+[1;32m     51[0m spark [38;5;241m=[39m SparkSession[38;5;241m.[39mbuilder[38;5;241m.[39mgetOrCreate()
+[0;32m---> 52[0m here [38;5;241m=[39m os[38;5;241m.[39mpath[38;5;241m.[39mdirname(os[38;5;241m.[39mpath[38;5;241m.[39mabspath([38;5;18m__file__[39m))
+[1;32m     53[0m text [38;5;241m=[39m [38;5;28mopen[39m(os[38;5;241m.[39mpath[38;5;241m.[39mjoin(here, a[38;5;241m.[39mfile))[38;5;241m.[39mread()[38;5;241m.[39mreplace([38;5;124m"[39m[38;5;124m$[39m[38;5;132;01m{catalog}[39;00m[38;5;124m"[39m, a[38;5;241m.[39mcatalog)
+[1;32m     54[0m stmts [38;5;241m=[39m split_statements(parse_sections(text)[a[38;5;241m.[39msection])
+
+[0;31mNameError[0m: name '__file__' is not defined
+Error: failed to reach TERMINATED or SKIPPED, got INTERNAL_ERROR: Task uc_governance_pre failed with message: Workload failed, see run output for details. This caused all downstream tasks to get skipped.
+[2026-11-17T19:45:20Z] exit code: 1
+================================================================================
+[2026-11-17T19:45:47Z] Phase 1 - deploy (fix governance file path)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-17T19:45:57Z] exit code: 0
+================================================================================
+[2026-11-17T19:45:57Z] Phase 1 - run setup_job (governance pre)
+$ databricks bundle run setup_job --only uc_governance_pre
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/736682816182681
+
+2026-11-17 14:45:59 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 14:47:32 "[dev erica_yuen] matter-intelligence-setup" TERMINATED SUCCESS
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.raw
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.curated
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.serving
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.ml
+[ok] -- Column mask: party names are visible only to legal_reviewers_full. CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.mask_party(party_name 
+[ok] -- Same rule applied to gold_clauses.extracted_value / normalized_value when the clause is the parties clause. CREATE OR REPLACE FUNCTION serverless_stable_oj7e
+[ok] -- Row filter: a user sees rows for matter teams they belong to, or everything if legal_admins. CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.cura
+[2026-11-17T19:47:34Z] exit code: 0
+================================================================================
+[2026-11-17T19:52:22Z] Phase 1 - pipeline dry run (validate-only)
+$ databricks bundle run matter_pipeline --validate-only
+Update URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/#joblist/pipelines/41d741ff-7755-44b7-9cfc-bb305a327764/updates/ceefa1ce-fb30-4f80-a816-ad399119ec04
+
+2026-11-17T19:52:29.041Z update_progress INFO "Update ceefa1 is WAITING_FOR_RESOURCES."
+2026-11-17T19:52:42.058Z update_progress INFO "Update ceefa1 is INITIALIZING."
+2026-11-17T19:52:52.544Z flow_progress   ERROR "Failed to resolve flow: 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags'."
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+2026-11-17T19:52:52.752Z flow_progress   ERROR "Failed to resolve flow: 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics'."
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+2026-11-17T19:52:56.340Z update_progress ERROR "Update ceefa1 has failed. Failed to analyze flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' and 1 other flow(s).."
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+Error: [flow_progress]  Failed to resolve flow: 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags'.
+trace for most recent exception: 
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+
+Error: [flow_progress]  Failed to resolve flow: 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics'.
+trace for most recent exception: 
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+
+Error: [update_progress]  Update ceefa1 has failed. Failed to analyze flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' and 1 other flow(s)..
+trace for most recent exception: 
+[FIELD_NOT_FOUND] No such struct field `response` in `result`, `errorMessage`. SQLSTATE: 42704
+
+Error: update failed
+[2026-11-17T19:52:59Z] exit code: 1
+================================================================================
+[2026-11-17T19:53:07Z] Phase 1 - deploy (fix ai_query result field)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-17T19:53:15Z] exit code: 0
+================================================================================
+[2026-11-17T19:53:15Z] Phase 1 - pipeline dry run (validate-only) #2
+$ databricks bundle run matter_pipeline --validate-only
+Update URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/#joblist/pipelines/41d741ff-7755-44b7-9cfc-bb305a327764/updates/6666057a-f2dc-446d-825e-7c7016d3c966
+
+2026-11-17T19:53:19.594Z update_progress INFO "Update 666605 is INITIALIZING."
+2026-11-17T19:53:25.261Z update_progress INFO "Update 666605 is COMPLETED."
+Update ID: 6666057a-f2dc-446d-825e-7c7016d3c966
+[2026-11-17T19:53:27Z] exit code: 0
+================================================================================
+[2026-11-17T19:53:36Z] Phase 1 - run setup_job (pipeline + governance post), doc_limit=20
+$ databricks bundle run setup_job --only run_pipeline,uc_governance_post
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/313360447837834
+
+2026-11-17 14:53:37 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 15:02:24 "[dev erica_yuen] matter-intelligence-setup" INTERNAL_ERROR FAILED Task uc_governance_post failed with message: Workload failed, see run output for details. This caused all downstream tasks to get skipped.
+Task uc_governance_post FAILED:
+SystemExit: One or more required statements failed
+An exception has occurred, use %tb to see the full traceback.
+
+[0;31mSystemExit[0m[0;31m:[0m One or more required statements failed
+
+
+Error: Task uc_governance_post failed!
+Error:
+SystemExit: One or more required statements failed
+Trace:
+An exception has occurred, use %tb to see the full traceback.
+
+[0;31mSystemExit[0m[0;31m:[0m One or more required statements failed
+
+Task uc_governance_post FAILED:
+SystemExit: One or more required statements failed
+An exception has occurred, use %tb to see the full traceback.
+
+[0;31mSystemExit[0m[0;31m:[0m One or more required statements failed
+
+
+Error: Task uc_governance_post failed!
+Error:
+SystemExit: One or more required statements failed
+Trace:
+An exception has occurred, use %tb to see the full traceback.
+
+[0;31mSystemExit[0m[0;31m:[0m One or more required statements failed
+
+Error: failed to reach TERMINATED or SKIPPED, got INTERNAL_ERROR: Task uc_governance_post failed with message: Workload failed, see run output for details. This caused all downstream tasks to get skipped.
+[2026-11-17T20:02:26Z] exit code: 1
+================================================================================
+[2026-11-17T20:04:00Z] Phase 1 - deploy (tag policy fix)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-17T20:04:09Z] exit code: 0
+================================================================================
+[2026-11-17T20:04:09Z] Phase 1 - run setup_job (governance post)
+$ databricks bundle run setup_job --only uc_governance_post
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/916339387273519
+
+2026-11-17 15:04:10 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 15:06:02 "[dev erica_yuen] matter-intelligence-setup" TERMINATED SUCCESS
+[ok] ALTER SCHEMA serverless_stable_oj7eie_catalog.curated SET TAGS ('privileged' = 'true')
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[allowed_failure] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('pii' = 'true')
+    -> [RequestId=dc0fb529-0357-4a78-8112-1353062992d2 ErrorClass=INVALID_PARAMETER_VALUE.UC_TAG_POLICY_VALUE_NOT_ALLOWED] Tag value true is not an allowed value for tag policy key pii. Allowed values: [ssn, address].
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER STREAMING TABLE serverless_stable_oj7eie_catalog.curated.silver_parsed ALTER COLUMN full_text SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_risk_flags SET TAGS ('privileged' = 'true')
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers`
+    -> [RequestId=dee8b7da-728a-4da8-a556-5fcf2ca639a8 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers`
+    -> [RequestId=647a1d7e-29ec-4c54-9b01-ba6ad2b9b16c ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers_full`
+    -> [RequestId=bf018bbb-e0a9-4d2e-913b-c3a9dcf31b48 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers_full`
+    -> [RequestId=f7922b52-5af5-4588-b86c-bd63e00b2ca0 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+[2026-11-17T20:06:04Z] exit code: 0
+================================================================================
+[2026-11-17T20:06:50Z] Phase 1 - deploy (refined auto_renewal / notice_period_days descriptions)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-17T20:06:58Z] exit code: 0
+================================================================================
+[2026-11-17T20:06:58Z] Phase 1 - pipeline full refresh (prompt refinement), doc_limit=20
+$ databricks bundle run matter_pipeline --full-refresh-all
+Update URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/#joblist/pipelines/41d741ff-7755-44b7-9cfc-bb305a327764/updates/3f14260a-357f-4eb1-b033-ef7e21bd81f9
+
+2026-11-17T20:07:04.144Z update_progress INFO "Update 3f1426 is WAITING_FOR_RESOURCES."
+2026-11-17T20:07:14.985Z update_progress INFO "Update 3f1426 is INITIALIZING."
+2026-11-17T20:07:25.320Z update_progress INFO "Update 3f1426 is RESETTING."
+2026-11-17T20:07:26.765Z update_progress INFO "Update 3f1426 is SETTING_UP_TABLES."
+2026-11-17T20:07:34.279Z update_progress INFO "Update 3f1426 is RUNNING."
+2026-11-17T20:07:34.291Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is QUEUED."
+2026-11-17T20:07:34.296Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is QUEUED."
+2026-11-17T20:07:34.297Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is QUEUED."
+2026-11-17T20:07:34.298Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is QUEUED."
+2026-11-17T20:07:34.300Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is QUEUED."
+2026-11-17T20:07:34.301Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is QUEUED."
+2026-11-17T20:07:34.302Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is QUEUED."
+2026-11-17T20:07:34.303Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is QUEUED."
+2026-11-17T20:07:34.304Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is QUEUED."
+2026-11-17T20:07:34.305Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is QUEUED."
+2026-11-17T20:07:34.306Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is QUEUED."
+2026-11-17T20:07:34.478Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is STARTING."
+2026-11-17T20:07:39.843Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is RUNNING."
+2026-11-17T20:07:48.569Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.raw.bronze_documents'."
+2026-11-17T20:07:48.669Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' has COMPLETED."
+2026-11-17T20:07:48.930Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is STARTING."
+2026-11-17T20:07:49.567Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is RUNNING."
+2026-11-17T20:10:11.448Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.silver_parsed'."
+2026-11-17T20:10:11.462Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' has COMPLETED."
+2026-11-17T20:10:11.649Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is STARTING."
+2026-11-17T20:10:12.167Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is RUNNING."
+2026-11-17T20:10:12.333Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is STARTING."
+2026-11-17T20:10:13.032Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is RUNNING."
+2026-11-17T20:10:13.055Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is PLANNING."
+2026-11-17T20:10:13.974Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is STARTING."
+2026-11-17T20:10:14.016Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is RUNNING."
+2026-11-17T20:10:17.908Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' has COMPLETED."
+2026-11-17T20:10:40.972Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_doc_classified'."
+2026-11-17T20:10:41.019Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' has COMPLETED."
+2026-11-17T20:15:36.888Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted'."
+2026-11-17T20:15:36.904Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' has COMPLETED."
+2026-11-17T20:15:37.108Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is STARTING."
+2026-11-17T20:15:37.786Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is RUNNING."
+2026-11-17T20:15:37.822Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is PLANNING."
+2026-11-17T20:15:38.307Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is STARTING."
+2026-11-17T20:15:38.415Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is RUNNING."
+2026-11-17T20:15:40.347Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_clauses'."
+2026-11-17T20:15:40.361Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' has COMPLETED."
+2026-11-17T20:15:41.814Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' has COMPLETED."
+2026-11-17T20:15:41.986Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is STARTING."
+2026-11-17T20:15:42.585Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is RUNNING."
+2026-11-17T20:15:42.653Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is PLANNING."
+2026-11-17T20:15:42.913Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is STARTING."
+2026-11-17T20:15:42.935Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is RUNNING."
+2026-11-17T20:15:46.703Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' has COMPLETED."
+2026-11-17T20:15:50.515Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_risk_flags'."
+2026-11-17T20:15:50.529Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' has COMPLETED."
+2026-11-17T20:15:50.560Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is PLANNING."
+2026-11-17T20:15:50.562Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is PLANNING."
+2026-11-17T20:15:50.833Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is STARTING."
+2026-11-17T20:15:50.863Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is RUNNING."
+2026-11-17T20:15:51.217Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is STARTING."
+2026-11-17T20:15:51.341Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is RUNNING."
+2026-11-17T20:15:54.182Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' has COMPLETED."
+2026-11-17T20:15:55.019Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' has COMPLETED."
+2026-11-17T20:15:55.062Z update_progress INFO "Update 3f1426 is COMPLETED."
+Update ID: 3f14260a-357f-4eb1-b033-ef7e21bd81f9
+[2026-11-17T20:15:58Z] exit code: 0
+================================================================================
+[2026-11-17T20:16:06Z] Phase 1 - full setup_job rerun (idempotency check), doc_limit=20
+$ databricks bundle run setup_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/351266092966902
+
+2026-11-17 15:16:09 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 15:20:07 "[dev erica_yuen] matter-intelligence-setup" TERMINATED SUCCESS
+Output:
+=======
+Task download_cuad:
+zip size: 105,883,672 bytes
+CUAD PDFs in archive: 510
+doc_limit=20 selected=20 copied=0 already_present=20
+Files now in /Volumes/serverless_stable_oj7eie_catalog/raw/contracts/pdfs: 20
+
+=======
+Task generate_synthetic:
+matters: 12 rows
+user_team_mapping: 10 rows
+risk_playbook: 8 rows
+
+=======
+Task uc_governance_pre:
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.raw
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.curated
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.serving
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.ml
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.mask_party(party_name STRING) RETURNS STRING COMMENT 'Column mask: shows party names only to
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.mask_parties_clause(value STRING, clause_type STRING) RETURNS STRING COMMENT 'Column mask: h
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.matter_team_filter(team STRING) RETURNS BOOLEAN COMMENT 'Row filter: matter_team must be one
+
+=======
+Task uc_governance_post:
+[ok] ALTER SCHEMA serverless_stable_oj7eie_catalog.curated SET TAGS ('privileged' = 'true')
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[allowed_failure] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('pii' = 'true')
+    -> [RequestId=61686d0f-80a4-41d8-bab2-72688ccb8e2e ErrorClass=INVALID_PARAMETER_VALUE.UC_TAG_POLICY_VALUE_NOT_ALLOWED] Tag value true is not an allowed value for tag policy key pii. Allowed values: [ssn, address].
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER STREAMING TABLE serverless_stable_oj7eie_catalog.curated.silver_parsed ALTER COLUMN full_text SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_risk_flags SET TAGS ('privileged' = 'true')
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers`
+    -> [RequestId=25a24f5a-7103-447b-b84d-a780c135f50a ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers`
+    -> [RequestId=6c1929b2-5727-40b1-963a-de3b93cbc34a ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers_full`
+    -> [RequestId=5c863e7d-bbcf-4177-8998-34a51f5a1252 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers_full`
+    -> [RequestId=4406e48f-f151-4cb3-9500-84f65eb6fe68 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+
+[2026-11-17T20:20:10Z] exit code: 0

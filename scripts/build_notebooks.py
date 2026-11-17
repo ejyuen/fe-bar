@@ -36,7 +36,7 @@ NOTEBOOKS = {
     ]),
     "02": ("02_pipeline_validation.ipynb", "# 02 - Pipeline validation\nRow counts, expectations and sample gold output from the Lakeflow declarative pipeline.", [
         "from export_evidence import pipeline_id\npid, name = pipeline_id(); print(pid, name)\nups = ws().pipelines.list_updates(pid, max_results=5).updates\npd.DataFrame([{'update_id': u.update_id, 'state': u.state.value, 'full_refresh': u.full_refresh} for u in ups])",
-        "from export_evidence import TABLES\nsql(' UNION ALL '.join(f\"SELECT '{t}' t, count(*) n FROM ${catalog}.{t}\" for t in TABLES))",
+        "from export_evidence import TABLES\nsql(' UNION ALL '.join(\"SELECT '%s' t, count(*) n FROM ${catalog}.%s\" % (t, t) for t in TABLES))",
         "sql(f\"\"\"WITH ev AS (SELECT origin.update_id, explode(from_json(details:flow_progress.data_quality.expectations::string,\n 'array<struct<name:string,dataset:string,passed_records:bigint,failed_records:bigint>>')) e\n FROM event_log('{pid}') WHERE event_type='flow_progress' AND details:flow_progress.data_quality.expectations IS NOT NULL)\nSELECT update_id, e.dataset, e.name, sum(e.passed_records) passed, sum(e.failed_records) failed FROM ev GROUP BY ALL ORDER BY 1,2,3\"\"\")",
         "sql(\"SELECT doc_id, page_count, parse_status, length(full_text) chars, parse_error FROM ${catalog}.curated.silver_parsed ORDER BY doc_id\")",
         "sql(\"SELECT contract_type, count(*) docs, round(avg(contract_type_confidence),3) conf FROM ${catalog}.curated.gold_documents GROUP BY 1 ORDER BY 2 DESC\")",
