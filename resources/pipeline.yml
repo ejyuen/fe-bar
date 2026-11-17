@@ -1,0 +1,35 @@
+resources:
+  pipelines:
+    matter_pipeline:
+      name: matter-intelligence-pipeline
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      channel: CURRENT
+      photon: true
+      continuous: false
+      development: false
+      configuration:
+        catalog: ${var.catalog}
+        volume_path: /Volumes/${var.catalog}/raw/contracts/pdfs/
+        extract_model_label: ${var.extract_model_label}
+        explain_model: ${var.explain_model}
+        # Illustrative unit prices (USD) used by gold_cost_metrics. Replace with your rate card.
+        price_parse_per_page: "0.005"
+        price_ai_fn_input_per_1m: "0.50"
+        price_ai_fn_output_per_1m: "1.50"
+        price_explain_input_per_1m: "1.00"
+        price_explain_output_per_1m: "5.00"
+      libraries:
+        - file:
+            path: ../src/pipeline/bronze_documents.sql
+        - file:
+            path: ../src/pipeline/silver_parsed.sql
+        - file:
+            path: ../src/pipeline/gold_classified.sql
+        - file:
+            path: ../src/pipeline/gold_clauses.sql
+        - file:
+            path: ../src/pipeline/gold_risk_flags.sql
+        - file:
+            path: ../src/pipeline/gold_cost_metrics.sql

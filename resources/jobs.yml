@@ -1,0 +1,40 @@
+resources:
+  jobs:
+    setup_job:
+      name: matter-intelligence-setup
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: download_cuad
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/setup/00_download_cuad.py
+            parameters: ["--catalog", "${var.catalog}", "--doc_limit", "${var.doc_limit}"]
+        - task_key: generate_synthetic
+          depends_on: [{task_key: download_cuad}]
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/setup/01_generate_synthetic.py
+            parameters: ["--catalog", "${var.catalog}"]
+        - task_key: uc_governance_pre
+          depends_on: [{task_key: generate_synthetic}]
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/setup/run_sql_file.py
+            parameters: ["--catalog", "${var.catalog}", "--file", "${workspace.file_path}/src/setup/02_uc_governance.sql", "--section", "pre"]
+        - task_key: run_pipeline
+          depends_on: [{task_key: uc_governance_pre}]
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.matter_pipeline.id}
+            full_refresh: false
+        - task_key: uc_governance_post
+          depends_on: [{task_key: run_pipeline}]
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/setup/run_sql_file.py
+            parameters: ["--catalog", "${var.catalog}", "--file", "${workspace.file_path}/src/setup/02_uc_governance.sql", "--section", "post"]
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - faker==37.4.0

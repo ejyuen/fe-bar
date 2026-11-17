@@ -1,0 +1,53 @@
+bundle:
+  name: matter-intelligence
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog that holds all Matter Intelligence schemas
+    default: matter_intel
+  schema:
+    description: Curated (silver/gold) schema
+    default: curated
+  warehouse_id:
+    description: SQL warehouse used by SQL tasks, the app and Genie
+  lakebase_instance:
+    description: Lakebase (Postgres) database instance name
+    default: matter-intel-lakebase
+  genie_space_id:
+    description: Genie space id (filled in after src/genie/create_space.py runs)
+    default: ""
+  doc_limit:
+    description: Number of CUAD contracts to stage into the Volume
+    default: 100
+  extract_model_label:
+    description: Label recorded in gold_clauses.model_name for the extraction step
+    default: "ai_extract:v2.1"
+  explain_model:
+    description: Foundation Model endpoint used by ai_query for risk explanations
+    default: databricks-claude-haiku-4-5
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+    variables:
+      # The workspace user cannot CREATE CATALOG on this metastore, so dev uses the
+      # workspace catalog (owned by the user) instead of the default matter_intel.
+      catalog: serverless_stable_oj7eie_catalog
+      warehouse_id: 8232b6cb7d06e103
+      doc_limit: 20
+
+  demo:
+    mode: production
+    workspace:
+      host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: serverless_stable_oj7eie_catalog
+      warehouse_id: 8232b6cb7d06e103
+      doc_limit: 100
