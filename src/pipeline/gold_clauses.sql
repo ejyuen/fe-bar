@@ -93,6 +93,8 @@ SELECT
     ELSE f.v
   END AS normalized_value,
   CASE WHEN cit IS NOT NULL THEN substr(extract_input, cit.start + 1, least(cit.stop - cit.start, 600)) END AS source_snippet,
+  -- wider window (+/- 400 chars around the citation) given to the risk-explanation step
+  CASE WHEN cit IS NOT NULL THEN substr(extract_input, greatest(1, cit.start + 1 - 400), least(cit.stop - cit.start, 1200) + 800) END AS source_context,
   f.c AS confidence,
   '${extract_model_label}' AS model_name,
   party_name,

@@ -67,7 +67,7 @@ def run_script(conn, sql_text: str):
 
 # ----------------------------------------------------------------------------- queue population
 def refresh_queue_from_synced(conn, synced_table: str = "serving.review_queue_synced") -> dict:
-    """Upsert the app queue from the synced table. Reviewer decisions (approved/overridden) are kept."""
+    """Upsert the app queue from the synced table and drop stale unreviewed rows. Reviewer decisions are kept."""
     cols = ", ".join(QUEUE_COLS)
     upd = ", ".join(f"{c} = EXCLUDED.{c}" for c in QUEUE_COLS if c != "clause_id")
     with tx(conn) as cur:
@@ -83,6 +83,11 @@ def refresh_queue_from_synced(conn, synced_table: str = "serving.review_queue_sy
                             THEN review.review_queue.current_value ELSE EXCLUDED.current_value END,
               updated_at = CASE WHEN review.review_queue.status IN ('approved', 'overridden')
                             THEN review.review_queue.updated_at ELSE now() END""")
+        # clauses that no longer exist upstream (e.g. after a full pipeline refresh) are removed unless a
+        # reviewer already acted on them (those rows keep their history)
+        cur.execute(f"""DELETE FROM review.review_queue q
+                        WHERE q.status IN ('pending', 'auto_accepted')
+                          AND NOT EXISTS (SELECT 1 FROM {synced_table} s WHERE s.clause_id = q.clause_id)""")
         cur.execute("SELECT status, count(*) AS n FROM review.review_queue GROUP BY status ORDER BY status")
         return {r["status"]: r["n"] for r in cur.fetchall()}
 

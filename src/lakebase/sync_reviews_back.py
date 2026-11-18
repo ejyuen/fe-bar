@@ -19,7 +19,7 @@ def main():
     ap.add_argument("--instance", required=True)
     ap.add_argument("--src_dir", required=True)
     ap.add_argument("--pg_database", default="databricks_postgres")
-    a = ap.parse_args()
+    a, _ = ap.parse_known_args()  # tolerate extra args when a job overrides python params for all tasks
     sys.path.insert(0, f"{a.src_dir}/app")
     os.environ["LAKEBASE_INSTANCE"] = a.instance
     os.environ["PGDATABASE"] = a.pg_database

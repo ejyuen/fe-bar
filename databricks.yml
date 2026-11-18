@@ -40,7 +40,8 @@ targets:
       # workspace catalog (owned by the user) instead of the default matter_intel.
       catalog: serverless_stable_oj7eie_catalog
       warehouse_id: 8232b6cb7d06e103
-      doc_limit: 20
+      doc_limit: 100
+      genie_space_id: 01f1e2f665f81ba9aa29a999a763139c
 
   demo:
     mode: production
@@ -51,3 +52,4 @@ targets:
       catalog: serverless_stable_oj7eie_catalog
       warehouse_id: 8232b6cb7d06e103
       doc_limit: 100
+      genie_space_id: 01f1e2f665f81ba9aa29a999a763139c

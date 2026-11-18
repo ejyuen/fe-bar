@@ -7,7 +7,7 @@ AS
 WITH m AS (
   SELECT
     sha2(concat(c.clause_id, ':', p.rule_id), 256) AS flag_id,
-    c.clause_id, c.doc_id, c.clause_type, c.normalized_value, c.source_snippet,
+    c.clause_id, c.doc_id, c.clause_type, c.normalized_value, c.source_snippet, c.source_context,
     p.rule_id, p.severity, p.rule_text,
     concat(p.rule_text, ' Extracted value: ', substr(c.normalized_value, 1, 200)) AS reason
   FROM STREAM(int_clauses) c
@@ -21,14 +21,16 @@ WITH m AS (
 e AS (
   SELECT m.*,
     CASE WHEN severity IN ('high', 'medium') THEN concat(
-      'You are a contract risk analyst. In 1-2 sentences, explain to an in-house lawyer why the clause below ',
-      'triggers this playbook rule. Quote or paraphrase only the source text; do not invent facts.\n',
+      'You are a contract risk analyst writing for an in-house lawyer. Using ONLY the contract excerpt below, ',
+      'write 1-2 sentences explaining why this clause triggers the playbook rule, quoting the decisive words. ',
+      'Do not state any number, party, section or obligation that is not in the excerpt. If the excerpt does not ',
+      'support the rule, reply exactly: "Not supported by the cited text - needs reviewer check."\n',
       'Rule: ', rule_text, '\nClause type: ', clause_type, '\nExtracted value: ', coalesce(normalized_value, ''),
-      '\nSource text: """', coalesce(source_snippet, '(no snippet)'), '"""') END AS prompt
+      '\nContract excerpt: """', coalesce(source_context, source_snippet, '(no excerpt)'), '"""') END AS prompt
   FROM m
 )
 SELECT
-  flag_id, clause_id, doc_id, rule_id, severity, reason, clause_type, source_snippet, prompt,
+  flag_id, clause_id, doc_id, rule_id, severity, reason, clause_type, source_snippet, source_context, prompt,
   CASE WHEN prompt IS NOT NULL THEN
     ai_query('${explain_model}', prompt,
              modelParameters => named_struct('max_tokens', 200, 'temperature', 0.0),

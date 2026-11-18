@@ -127,3 +127,30 @@ resources:
           spec:
             environment_version: "4"
             dependencies: ["psycopg[binary]>=3.2", "databricks-sdk>=0.67"]
+
+    override_demo_job:
+      name: matter-intelligence-genie-override-demo
+      description: Demo step 4/5 - reviewer overrides uncapped liability on the auto-renewing license; synced back so Genie reflects it
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: override_uncapped_liability
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/roundtrip_demo.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--src_dir", "${workspace.file_path}/src", "--clause_type", "uncapped_liability",
+                         "--doc_title_like", "%JOINT CONTENT LICENSE%", "--new_value", "false",
+                         "--comment", "Carve-outs are subject to the aggregate cap per side letter; liability is capped",
+                         "--skip_latency"]
+        - task_key: sync_reviews_back
+          depends_on: [{task_key: override_uncapped_liability}]
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/sync_reviews_back.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--src_dir", "${workspace.file_path}/src"]
+      environments:
+        - environment_key: lakebase
+          spec:
+            environment_version: "4"
+            dependencies: ["psycopg[binary]>=3.2", "databricks-sdk>=0.67"]

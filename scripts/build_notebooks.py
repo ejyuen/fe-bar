@@ -65,6 +65,20 @@ NOTEBOOKS = {
         "sql(\"SELECT clause_id, clause_type, extracted_value, reviewed_value, review_action, reviewer, reviewed_at, synced_at FROM ${catalog}.curated.gold_reviewed_clauses\")",
         "sql(\"SELECT actor, action, count(*) n, round(percentile(duration_ms, 0.95),1) p95_ms FROM ${catalog}.serving.pg_audit_log GROUP BY ALL ORDER BY 1,2\")",
     ]),
+    "05": ("05_genie_validation.ipynb", "# 05 - Genie validation\nGenie answers vs hand-written SQL (src/genie/validate.py), including the demo question whose answer changes after the Lakebase override.", [
+        "sp = ws().genie.get_space(os.environ.get('MI_GENIE_SPACE_ID', '01f1e2f665f81ba9aa29a999a763139c'))\nprint(sp.space_id, '|', sp.title, '| warehouse', sp.warehouse_id)",
+        "sql(\"SELECT tag, run_id, count(*) questions, count_if(pass) passed, min(ts) ts FROM ${catalog}.ml.genie_validation GROUP BY ALL ORDER BY ts\")",
+        "latest = sql(\"SELECT run_id FROM ${catalog}.ml.genie_validation WHERE tag = 'before' ORDER BY ts DESC LIMIT 1\").iloc[0,0]\nv = sql(f\"SELECT q_no, question, pass, reason, genie_seconds, genie_sql FROM {CATALOG}.ml.genie_validation WHERE run_id = '{latest}' ORDER BY q_no\")\nv",
+        "for r in v.itertuples(): print(f'Q{r.q_no}: {r.question}\\n{r.genie_sql}\\n')",
+        "sql(\"SELECT tag, q_no, genie_rows, hand_rows, pass, ts FROM ${catalog}.ml.genie_validation WHERE q_no = 1 AND tag IN ('before','after') ORDER BY ts DESC LIMIT 2\")",
+        "sql(\"SELECT clause_type, reviewed_value, review_action, reviewer, review_comment, reviewed_at, synced_at FROM ${catalog}.curated.gold_reviewed_clauses WHERE clause_type = 'uncapped_liability'\")",
+    ]),
+    "06": ("06_roi_model.ipynb", "# 06 - ROI model\nMeasured build values + labelled assumptions -> annual value, platform cost, payback. Writes evidence/roi_model.md.", [
+        "import roi_model\nm, a, out = roi_model.compute()\npd.Series(m, name='measured')",
+        "pd.DataFrame([(k, *v) for k, v in roi_model.ASSUMPTIONS.items()], columns=['assumption','value','unit','source'])",
+        "pd.Series(out, name='output').map(lambda v: round(v, 2) if isinstance(v, float) else v)",
+        "md_text = roi_model.to_markdown(m, a, out)\nopen('../evidence/roi_model.md', 'w').write(md_text)\nprint(md_text)",
+    ]),
 }
 
 

@@ -895,3 +895,831 @@ pg_audit_log: 17 rows mirrored
 
 gold_reviewed_clauses rows: 4 (latest reviews in Lakebase: 4) synced_at=2026-11-18 02:12:08.463036
 [2026-11-18T02:12:47Z] exit code: 0
+[2026-11-18T02:25:06Z] [note] Final run: doc_limit 20 -> 100, explanation prompt now uses +/-400 char context; full refresh of the pipeline
+================================================================================
+[2026-11-18T02:25:06Z] Final - validate
+$ databricks bundle validate
+Name: matter-intelligence
+Target: dev
+Workspace:
+  Host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+  User: erica.yuen@databricks.com
+  Path: /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev
+
+Validation OK!
+[2026-11-18T02:25:08Z] exit code: 0
+================================================================================
+[2026-11-18T02:25:08Z] Final - deploy (doc_limit=100, prompt v2, Genie space id)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T02:25:22Z] exit code: 0
+================================================================================
+[2026-11-18T02:25:22Z] Final - setup_job stage 100 docs + synthetic + governance pre
+$ databricks bundle run setup_job --only download_cuad,generate_synthetic,uc_governance_pre
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/167959131035506
+
+2026-11-17 21:25:23 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 21:27:29 "[dev erica_yuen] matter-intelligence-setup" TERMINATED SUCCESS
+Output:
+=======
+Task download_cuad:
+zip size: 105,883,672 bytes
+CUAD PDFs in archive: 510
+doc_limit=100 selected=100 copied=80 already_present=20
+Files now in /Volumes/serverless_stable_oj7eie_catalog/raw/contracts/pdfs: 100
+
+=======
+Task generate_synthetic:
+matters: 12 rows
+user_team_mapping: 10 rows
+risk_playbook: 8 rows
+
+=======
+Task uc_governance_pre:
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.raw
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.curated
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.serving
+[ok] CREATE SCHEMA IF NOT EXISTS serverless_stable_oj7eie_catalog.ml
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.mask_party(party_name STRING) RETURNS STRING COMMENT 'Column mask: shows party names only to
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.mask_parties_clause(value STRING, clause_type STRING) RETURNS STRING COMMENT 'Column mask: h
+[ok] CREATE OR REPLACE FUNCTION serverless_stable_oj7eie_catalog.curated.matter_team_filter(team STRING) RETURNS BOOLEAN COMMENT 'Row filter: matter_team must be one
+
+[2026-11-18T02:27:31Z] exit code: 0
+================================================================================
+[2026-11-18T02:27:31Z] Final - pipeline full refresh (100 docs)
+$ databricks bundle run matter_pipeline --full-refresh-all
+Update URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/#joblist/pipelines/41d741ff-7755-44b7-9cfc-bb305a327764/updates/ba94fa9a-3741-4a89-b347-726ae348298b
+
+2026-11-18T02:27:38.358Z update_progress INFO "Update ba94fa is WAITING_FOR_RESOURCES."
+2026-11-18T02:27:49.431Z update_progress INFO "Update ba94fa is INITIALIZING."
+2026-11-18T02:28:01.011Z update_progress INFO "Update ba94fa is RESETTING."
+2026-11-18T02:28:02.429Z update_progress INFO "Update ba94fa is SETTING_UP_TABLES."
+2026-11-18T02:28:11.382Z update_progress INFO "Update ba94fa is RUNNING."
+2026-11-18T02:28:11.394Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is QUEUED."
+2026-11-18T02:28:11.402Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is QUEUED."
+2026-11-18T02:28:11.404Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is QUEUED."
+2026-11-18T02:28:11.405Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is QUEUED."
+2026-11-18T02:28:11.407Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is QUEUED."
+2026-11-18T02:28:11.408Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is QUEUED."
+2026-11-18T02:28:11.410Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.serving.review_queue_source' is QUEUED."
+2026-11-18T02:28:11.411Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is QUEUED."
+2026-11-18T02:28:11.412Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is QUEUED."
+2026-11-18T02:28:11.413Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is QUEUED."
+2026-11-18T02:28:11.415Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is QUEUED."
+2026-11-18T02:28:11.416Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is QUEUED."
+2026-11-18T02:28:11.607Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is STARTING."
+2026-11-18T02:28:17.255Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' is RUNNING."
+2026-11-18T02:28:27.085Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.raw.bronze_documents'."
+2026-11-18T02:28:27.190Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.raw.bronze_documents' has COMPLETED."
+2026-11-18T02:28:27.391Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is STARTING."
+2026-11-18T02:28:27.941Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' is RUNNING."
+2026-11-18T02:33:11.619Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.silver_parsed'."
+2026-11-18T02:33:11.670Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.silver_parsed' has COMPLETED."
+2026-11-18T02:33:11.876Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is STARTING."
+2026-11-18T02:33:12.484Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' is RUNNING."
+2026-11-18T02:33:12.667Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is STARTING."
+2026-11-18T02:33:13.251Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' is RUNNING."
+2026-11-18T02:33:13.267Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is PLANNING."
+2026-11-18T02:33:14.202Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is STARTING."
+2026-11-18T02:33:14.251Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' is RUNNING."
+2026-11-18T02:33:16.967Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.doc_matter' has COMPLETED."
+2026-11-18T02:35:12.442Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_doc_classified'."
+2026-11-18T02:35:12.463Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_classified' has COMPLETED."
+2026-11-18T02:40:28.680Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted'."
+2026-11-18T02:40:28.697Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_doc_extracted' has COMPLETED."
+2026-11-18T02:40:28.917Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is STARTING."
+2026-11-18T02:40:29.524Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' is RUNNING."
+2026-11-18T02:40:29.562Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is PLANNING."
+2026-11-18T02:40:30.048Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is STARTING."
+2026-11-18T02:40:30.157Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' is RUNNING."
+2026-11-18T02:40:32.144Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_clauses'."
+2026-11-18T02:40:32.170Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_clauses' has COMPLETED."
+2026-11-18T02:40:33.930Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is STARTING."
+2026-11-18T02:40:33.970Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_documents' has COMPLETED."
+2026-11-18T02:40:34.577Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' is RUNNING."
+2026-11-18T02:40:34.655Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is PLANNING."
+2026-11-18T02:40:34.924Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is STARTING."
+2026-11-18T02:40:34.954Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' is RUNNING."
+2026-11-18T02:40:37.664Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_clauses' has COMPLETED."
+2026-11-18T02:40:53.906Z flow_progress   INFO "Completed a streaming update of 'serverless_stable_oj7eie_catalog.curated.int_risk_flags'."
+2026-11-18T02:40:53.922Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.int_risk_flags' has COMPLETED."
+2026-11-18T02:40:53.956Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is PLANNING."
+2026-11-18T02:40:53.958Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.serving.review_queue_source' is PLANNING."
+2026-11-18T02:40:53.959Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is PLANNING."
+2026-11-18T02:40:54.317Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is STARTING."
+2026-11-18T02:40:54.343Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' is RUNNING."
+2026-11-18T02:40:54.649Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.serving.review_queue_source' is STARTING."
+2026-11-18T02:40:54.715Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.serving.review_queue_source' is RUNNING."
+2026-11-18T02:40:54.794Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is STARTING."
+2026-11-18T02:40:54.966Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' is RUNNING."
+2026-11-18T02:40:57.884Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_risk_flags' has COMPLETED."
+2026-11-18T02:40:58.737Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.serving.review_queue_source' has COMPLETED."
+2026-11-18T02:40:59.731Z flow_progress   INFO "Flow 'serverless_stable_oj7eie_catalog.curated.gold_cost_metrics' has COMPLETED."
+2026-11-18T02:40:59.776Z update_progress INFO "Update ba94fa is COMPLETED."
+Update ID: ba94fa9a-3741-4a89-b347-726ae348298b
+[2026-11-18T02:41:04Z] exit code: 0
+================================================================================
+[2026-11-18T02:41:04Z] Final - setup_job governance post
+$ databricks bundle run setup_job --only uc_governance_post
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/804262037286299/run/737646693462248
+
+2026-11-17 21:41:07 "[dev erica_yuen] matter-intelligence-setup" RUNNING
+2026-11-17 21:41:57 "[dev erica_yuen] matter-intelligence-setup" TERMINATED SUCCESS
+[ok] ALTER SCHEMA serverless_stable_oj7eie_catalog.curated SET TAGS ('privileged' = 'true')
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/setup/run_sql_file.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log.append((datetime.datetime.utcnow(), os.path.basename(a.file), a.section, first, status, err))
+
+
+[allowed_failure] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('pii' = 'true')
+    -> [RequestId=046d7966-d4ec-4a28-8bdc-ef828b88f697 ErrorClass=INVALID_PARAMETER_VALUE.UC_TAG_POLICY_VALUE_NOT_ALLOWED] Tag value true is not an allowed value for tag policy key pii. Allowed values: [ssn, address].
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents ALTER COLUMN party_name SET TAGS ('data_classification' = 'pii')
+[ok] ALTER STREAMING TABLE serverless_stable_oj7eie_catalog.curated.silver_parsed ALTER COLUMN full_text SET TAGS ('data_classification' = 'pii')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_clauses SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_documents SET TAGS ('privileged' = 'true')
+[ok] ALTER MATERIALIZED VIEW serverless_stable_oj7eie_catalog.curated.gold_risk_flags SET TAGS ('privileged' = 'true')
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers`
+    -> [RequestId=6d439937-5253-46aa-9caf-dcf1f6784e7f ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers`
+    -> [RequestId=8ee839bf-4c13-4fc9-bc5a-415d8d3141e4 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers.
+[allowed_failure] GRANT USE CATALOG ON CATALOG serverless_stable_oj7eie_catalog TO `legal_reviewers_full`
+    -> [RequestId=e14207e9-6c7c-47b4-a1cb-73af5bcc41f6 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+[allowed_failure] GRANT USE SCHEMA, SELECT ON SCHEMA serverless_stable_oj7eie_catalog.curated TO `legal_reviewers_full`
+    -> [RequestId=4b60f136-03ca-4775-af54-a1aab7fbe26a ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
+[2026-11-18T02:41:59Z] exit code: 0
+================================================================================
+[2026-11-18T02:41:59Z] Final - eval_job (100 docs)
+$ databricks bundle run eval_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/798406412670485/run/168846953585342
+
+2026-11-17 21:42:01 "[dev erica_yuen] matter-intelligence-eval" RUNNING
+2026-11-17 21:56:57 "[dev erica_yuen] matter-intelligence-eval" TERMINATED SUCCESS
+Output:
+=======
+Task build_eval_set:
+                clause_type      basis docs gt_present
+     assignment_restriction     yes_no   99         72
+               auto_renewal span_proxy   99         29
+             effective_date       span   99         76
+                exclusivity     yes_no   99         37
+            expiration_date       span   99         81
+              governing_law       span   99         85
+              liability_cap     yes_no   99         47
+                non_compete     yes_no   99         25
+         notice_period_days       span   99         17
+                    parties       span   99         99
+               renewal_term       span   99         29
+termination_for_convenience     yes_no   99         34
+         uncapped_liability     yes_no   99         24
+
+=======
+Task run_eval:
+[1;38;5;208mIf you are using MLflow Tracing, you can migrate your traces to Unity Catalog for unlimited storage, fine-grained access controls, and queryability from notebooks, SQL, and dashboards. [94mLearn more: https://docs.databricks.com/aws/en/mlflow3/genai/tracing/migrate-traces-to-uc[0m
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/eval/run_eval.py:67: UserWarning: Parsing dates in %d/%m/%Y format when dayfirst=False (the default) was specified. Pass `dayfirst=True` or specify a format to silence this warning.
+  d = pd.to_datetime(s.strip(), errors="raise")
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/eval/run_eval.py:196: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_name = f"eval-{model_name}-{datetime.datetime.utcnow():%Y%m%d-%H%M%S}"
+Unexpected status resolving file endpoints (403, request ID 17ba768d-416b-4b42-8a14-50d6d021fc4a), using the default endpoints.
+2026/11/18 02:43:56 INFO mlflow.genai.utils.data_validation: Testing model prediction with the first sample in the dataset. To disable this check, set the MLFLOW_GENAI_EVAL_SKIP_TRACE_VALIDATION environment variable to True.
+
+
+Evaluating:   0%|          | 0/136 [Elapsed: 00:00, Remaining: ?]
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Evaluation output</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            a.button {
+                padding: 4px 8px;
+                line-height: 20px;
+                box-shadow: none;
+                height: 20px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                vertical-align: middle;
+                background-color: rgb(34, 114, 180);
+                color: rgb(255, 255, 255);
+                text-decoration: none;
+                animation-duration: 0s;
+                transition: none 0s ease 0s;
+                position: relative;
+                white-space: nowrap;
+                text-align: center;
+                border: 1px solid rgb(192, 205, 216);
+                cursor: pointer;
+                user-select: none;
+                touch-action: manipulation;
+                border-radius: 4px;
+                gap: 6px;
+            }
+
+            a.button:hover {
+                background-color: rgb(14, 83, 139) !important;
+                border-color: transparent !important;
+                color: rgb(255, 255, 255) !important;
+            }
+        }
+
+        .warnings-section {
+            margin-top: 8px;
+
+            ul {
+                list-style-type: none;
+            }
+        }
+
+        .instructions-section {
+            margin-top: 16px;
+            font-size: 14px;
+
+            ul {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        }
+
+        code {
+            font-family: monospace;
+        }
+
+        .note {
+            color: #666;
+        }
+
+        a {
+            color: #2272B4;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #005580;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="header">
+        <a href="https://fevm-serverless-stable-oj7eie.cloud.databricks.com/ml/experiments/702680364159558/evaluation-runs?selectedRunUuid=c3d5551824c7460e8f811c5691c0154e" class="button">
+            View evaluation results in MLflow
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false" class="">
+                <path fill="currentColor" d="M10 1h5v5h-1.5V3.56L8.53 8.53 7.47 7.47l4.97-4.97H10z"></path>
+                <path fill="currentColor" d="M1 2.75A.75.75 0 0 1 1.75 2H8v1.5H2.5v10h10V8H14v6.25a.75.75 0 0 1-.75.75H1.75a.75.75 0 0 1-.75-.75z"></path>
+            </svg>
+        </a>
+    </div>
+</div>
+</body>
+</html>
+
+
+judge rows: 136, failed after retry: 0
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/eval/run_eval.py:249: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+                clause_type      basis  tp  fp  fn  tn  precision   recall       f1  value_compared  exact_match_rate  fuzzy_match_rate
+     assignment_restriction     yes_no  68   5   4  22   0.931507 0.944444 0.937931               0               NaN               NaN
+               auto_renewal span_proxy  14   2  15  68   0.875000 0.482759 0.622222               0               NaN               NaN
+             effective_date       span  72  16   4   7   0.818182 0.947368 0.878049              66          0.954545          0.954545
+                exclusivity     yes_no  32  14   5  48   0.695652 0.864865 0.771084               0               NaN               NaN
+            expiration_date       span  41   2  40  16   0.953488 0.506173 0.661290              38          0.973684          0.973684
+              governing_law       span  76   1   9  13   0.987013 0.894118 0.938272              75          0.880000          1.000000
+              liability_cap     yes_no  35   1  12  51   0.972222 0.744681 0.843373               0               NaN               NaN
+                non_compete     yes_no  22  13   3  61   0.628571 0.880000 0.733333               0               NaN               NaN
+         notice_period_days       span  14  10   3  72   0.583333 0.823529 0.682927              14          1.000000          1.000000
+                    parties       span  99   0   0   0   1.000000 1.000000 1.000000              99          0.020202          0.878788
+               renewal_term       span  21   6   8  64   0.777778 0.724138 0.750000              21          0.000000          0.619048
+termination_for_convenience     yes_no  23  13  11  52   0.638889 0.676471 0.657143               0               NaN               NaN
+         uncapped_liability     yes_no  13  13  11  62   0.500000 0.541667 0.520000               0               NaN               NaN
+{
+  "experiment": "/Users/erica.yuen@databricks.com/matter-intelligence-eval",
+  "experiment_id": "702680364159558",
+  "run_id": "c3d5551824c7460e8f811c5691c0154e",
+  "micro_precision": 0.8466453674121406,
+  "micro_recall": 0.8091603053435115,
+  "micro_f1": 0.8274785323965652,
+  "macro_f1": 0.7688942165985757,
+  "key_clause_precision": 0.8693693693693694,
+  "key_clause_recall": 0.6819787985865724,
+  "key_clause_f1": 0.7643564356435643,
+  "cost_per_1k_docs_usd": 108.64,
+  "judged_explanations": 136,
+  "judge_failures": 0,
+  "judge_retried_ok": 0,
+  "groundedness": 0.9117647058823529
+}
+
+[2026-11-18T02:56:59Z] exit code: 0
+================================================================================
+[2026-11-18T02:56:59Z] Final - lakebase_job (refresh synced table + queue)
+$ databricks bundle run lakebase_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/983465134822251/run/946116568487445
+
+2026-11-17 21:57:01 "[dev erica_yuen] matter-intelligence-lakebase-setup" RUNNING
+2026-11-17 21:59:36 "[dev erica_yuen] matter-intelligence-lakebase-setup" TERMINATED SUCCESS
+Lakebase instance matter-intel-lakebase: state=DatabaseInstanceState.AVAILABLE, capacity=CU_1
+schema.sql applied
+synced table exists (pipeline cfffefe6-6329-4b7c-bd43-71ddd1445d82); triggering snapshot refresh
+  synced table state: SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE (Synced table creation succeeded using Delta Live Tables: https://fevm-serverless-stable-oj7eie.cloud.databricks.com#joblist/pipelines/cfffefe6-6329-4b7c-bd43-71ddd1445d82/updates/991bd01e-5b44-410f-bf13-92084134b88a.)
+  sync pipeline update 991bd01e-5b44-410f-bf13-92084134b88a: COMPLETED
+rows in Postgres serving.review_queue_synced: 775
+review_queue status counts after refresh: {'approved': 2, 'auto_accepted': 679, 'overridden': 2, 'pending': 106}
+app matter-intel-reviewer: service principal 12155ad4-fbf1-472a-8265-34a00751cc06
+  [ok] GRANT USAGE ON SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE ON SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT ON ALL TABLES IN SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USE CATALOG ON CATALOG `serverless_stable_oj7eie_catalog` TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA, SELECT ON SCHEMA `serverless_stable_oj7eie_catalog`.curated TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA ON SCHEMA `serverless_stable_oj7eie_catalog`.serving TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+[2026-11-18T02:59:37Z] exit code: 0
+================================================================================
+[2026-11-18T02:59:37Z] Final - run matter_app (Genie enabled)
+$ databricks bundle run matter_app
+✓ Getting the status of the app matter-intel-reviewer
+✓ App is in RUNNING state
+✓ App compute is in ACTIVE state
+✓ Preparing source code for new app deployment.
+✓ Preparing source code for new app deployment.
+✓ Downloading source code from /Workspace/Users/12155ad4-fbf1-472a-8265-34a00751cc06/src/01f1e2fc18531fc8b25f08e9c0ebe1b0
+✓ App started successfully
+You can access the app at https://matter-intel-reviewer-7474658702717177.aws.databricksapps.com
+[2026-11-18T02:59:46Z] exit code: 0
+================================================================================
+[2026-11-18T03:00:32Z] Final - sync_job (refresh Lakebase mirrors before Genie validation)
+$ databricks bundle run sync_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/598209240763002/run/725261776701985
+
+2026-11-17 22:00:34 "[dev erica_yuen] matter-intelligence-sync-reviews" RUNNING
+2026-11-17 22:01:44 "[dev erica_yuen] matter-intelligence-sync-reviews" TERMINATED SUCCESS
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 789 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 4 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 17 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 4 (latest reviews in Lakebase: 4) synced_at=2026-11-18 03:00:58.907567
+[2026-11-18T03:01:44Z] exit code: 0
+================================================================================
+[2026-11-18T03:02:19Z] Final - deploy (queue refresh removes stale unreviewed clauses)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T03:02:29Z] exit code: 0
+================================================================================
+[2026-11-18T03:02:30Z] Final - lakebase_job (queue refresh with stale-row cleanup)
+$ databricks bundle run lakebase_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/983465134822251/run/401293681074508
+
+2026-11-17 22:02:31 "[dev erica_yuen] matter-intelligence-lakebase-setup" RUNNING
+2026-11-17 22:05:07 "[dev erica_yuen] matter-intelligence-lakebase-setup" TERMINATED SUCCESS
+Lakebase instance matter-intel-lakebase: state=DatabaseInstanceState.AVAILABLE, capacity=CU_1
+schema.sql applied
+synced table exists (pipeline cfffefe6-6329-4b7c-bd43-71ddd1445d82); triggering snapshot refresh
+  synced table state: SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE (Synced table creation succeeded using Delta Live Tables: https://fevm-serverless-stable-oj7eie.cloud.databricks.com#joblist/pipelines/cfffefe6-6329-4b7c-bd43-71ddd1445d82/updates/965bbfbf-480e-47e2-b93d-ec061e1ad186.)
+  sync pipeline update 965bbfbf-480e-47e2-b93d-ec061e1ad186: COMPLETED
+rows in Postgres serving.review_queue_synced: 775
+review_queue status counts after refresh: {'approved': 2, 'auto_accepted': 670, 'overridden': 2, 'pending': 101}
+app matter-intel-reviewer: service principal 12155ad4-fbf1-472a-8265-34a00751cc06
+  [ok] GRANT USAGE ON SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE ON SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT ON ALL TABLES IN SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USE CATALOG ON CATALOG `serverless_stable_oj7eie_catalog` TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA, SELECT ON SCHEMA `serverless_stable_oj7eie_catalog`.curated TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA ON SCHEMA `serverless_stable_oj7eie_catalog`.serving TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+[2026-11-18T03:05:08Z] exit code: 0
+================================================================================
+[2026-11-18T03:05:08Z] Final - sync_job (mirrors)
+$ databricks bundle run sync_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/598209240763002/run/27541598347429
+
+2026-11-17 22:05:10 "[dev erica_yuen] matter-intelligence-sync-reviews" RUNNING
+2026-11-17 22:06:11 "[dev erica_yuen] matter-intelligence-sync-reviews" TERMINATED SUCCESS
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 775 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 4 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 17 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 4 (latest reviews in Lakebase: 4) synced_at=2026-11-18 03:05:34.155247
+[2026-11-18T03:06:11Z] exit code: 0
+================================================================================
+[2026-11-18T03:06:22Z] Final - override_demo_job (reviewer sets uncapped_liability=false on the auto-renewing license, sync back)
+$ databricks bundle run override_demo_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/250471542798959/run/732861771635968
+
+2026-11-17 22:06:24 "[dev erica_yuen] matter-intelligence-genie-override-demo" RUNNING
+2026-11-17 22:07:56 "[dev erica_yuen] matter-intelligence-genie-override-demo" TERMINATED SUCCESS
+Output:
+=======
+Task override_uncapped_liability:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_id = datetime.datetime.utcnow().strftime(f"rt-{a.clause_type}-%Y%m%d-%H%M%S")
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:44: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ev.append((run_id, len(ev) + 1, step, datetime.datetime.utcnow(), json.dumps(payload, indent=1)))
+
+
+== 1_review_queue_before
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "doc_id": "007493cb2c881bc464f4ee102044914082f89a8018fced6482358426d9bb7340",
+ "doc_title": "JOINT CONTENT LICENSE AGREEMENT",
+ "contract_type": "License",
+ "matter_team": "Team Atlas",
+ "clause_type": "uncapped_liability",
+ "current_value": "true",
+ "confidence": 1.0,
+ "severity": "high",
+ "status": "pending",
+ "updated_at": "2026-11-18 03:04:48.351782+00:00"
+}
+== 2_override_action
+{
+ "request": {
+  "function": "lakebase.override",
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped"
+ },
+ "response": {
+  "review_id": 35,
+  "reviewed_at": "2026-11-18T03:06:58.500566+00:00",
+  "old_value": "true",
+  "new_value": "false",
+  "status": "overridden",
+  "duration_ms": 16.75,
+  "dry_run": false
+ }
+}
+== 3_review_queue_after
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "current_value": "false",
+ "status": "overridden",
+ "updated_at": "2026-11-18 03:06:58.500566+00:00"
+}
+== 4_clause_reviews_after
+[
+ {
+  "review_id": 35,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "true",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped",
+  "reviewed_at": "2026-11-18 03:06:58.500566+00:00"
+ }
+]
+round trip rt-uncapped_liability-20261118-030658 clause aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b
+
+=======
+Task sync_reviews_back:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 775 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 5 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 18 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 5 (latest reviews in Lakebase: 5) synced_at=2026-11-18 03:07:27.116380
+
+[2026-11-18T03:07:57Z] exit code: 0
+[2026-11-18T03:08:17Z] [note] Genie 'before' validation was skipped by a shell quoting error and the demo override ran first; restoring uncapped_liability=true via a recorded reviewer override, then re-running before -> override -> after
+================================================================================
+[2026-11-18T03:08:17Z] Final - deploy (sync tolerates extra params)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T03:08:25Z] exit code: 0
+================================================================================
+[2026-11-18T03:08:25Z] Final - override_demo_job RESTORE uncapped_liability=true (reset for before/after demo)
+$ databricks bundle run override_demo_job --python-params --catalog,serverless_stable_oj7eie_catalog,--instance,matter-intel-lakebase,--src_dir,/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src,--clause_type,uncapped_liability,--doc_title_like,%JOINT CONTENT LICENSE%,--new_value,true,--comment,Reset to AI-extracted value before re-running the Genie before/after demo,--skip_latency
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/250471542798959/run/868870507913124
+
+2026-11-17 22:08:27 "[dev erica_yuen] matter-intelligence-genie-override-demo" RUNNING
+2026-11-17 22:10:00 "[dev erica_yuen] matter-intelligence-genie-override-demo" TERMINATED SUCCESS
+Output:
+=======
+Task override_uncapped_liability:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_id = datetime.datetime.utcnow().strftime(f"rt-{a.clause_type}-%Y%m%d-%H%M%S")
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:44: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ev.append((run_id, len(ev) + 1, step, datetime.datetime.utcnow(), json.dumps(payload, indent=1)))
+
+
+== 1_review_queue_before
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "doc_id": "007493cb2c881bc464f4ee102044914082f89a8018fced6482358426d9bb7340",
+ "doc_title": "JOINT CONTENT LICENSE AGREEMENT",
+ "contract_type": "License",
+ "matter_team": "Team Atlas",
+ "clause_type": "uncapped_liability",
+ "current_value": "false",
+ "confidence": 1.0,
+ "severity": "high",
+ "status": "overridden",
+ "updated_at": "2026-11-18 03:06:58.500566+00:00"
+}
+== 2_override_action
+{
+ "request": {
+  "function": "lakebase.override",
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "new_value": "true",
+  "comment": "Reset to AI-extracted value before re-running the Genie before/after demo"
+ },
+ "response": {
+  "review_id": 36,
+  "reviewed_at": "2026-11-18T03:08:59.339083+00:00",
+  "old_value": "false",
+  "new_value": "true",
+  "status": "overridden",
+  "duration_ms": 12.07,
+  "dry_run": false
+ }
+}
+== 3_review_queue_after
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "current_value": "true",
+ "status": "overridden",
+ "updated_at": "2026-11-18 03:08:59.339083+00:00"
+}
+== 4_clause_reviews_after
+[
+ {
+  "review_id": 35,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "true",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped",
+  "reviewed_at": "2026-11-18 03:06:58.500566+00:00"
+ },
+ {
+  "review_id": 36,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "false",
+  "new_value": "true",
+  "comment": "Reset to AI-extracted value before re-running the Genie before/after demo",
+  "reviewed_at": "2026-11-18 03:08:59.339083+00:00"
+ }
+]
+round trip rt-uncapped_liability-20261118-030859 clause aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b
+
+=======
+Task sync_reviews_back:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 775 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 6 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 19 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 5 (latest reviews in Lakebase: 5) synced_at=2026-11-18 03:09:28.494493
+
+[2026-11-18T03:10:02Z] exit code: 0
+================================================================================
+[2026-11-18T03:12:11Z] Final - override_demo_job (demo: reviewer sets uncapped_liability=false, sync back)
+$ databricks bundle run override_demo_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/250471542798959/run/119496321646552
+
+2026-11-17 22:12:13 "[dev erica_yuen] matter-intelligence-genie-override-demo" RUNNING
+2026-11-17 22:13:35 "[dev erica_yuen] matter-intelligence-genie-override-demo" TERMINATED SUCCESS
+Output:
+=======
+Task override_uncapped_liability:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_id = datetime.datetime.utcnow().strftime(f"rt-{a.clause_type}-%Y%m%d-%H%M%S")
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:44: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ev.append((run_id, len(ev) + 1, step, datetime.datetime.utcnow(), json.dumps(payload, indent=1)))
+
+
+== 1_review_queue_before
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "doc_id": "007493cb2c881bc464f4ee102044914082f89a8018fced6482358426d9bb7340",
+ "doc_title": "JOINT CONTENT LICENSE AGREEMENT",
+ "contract_type": "License",
+ "matter_team": "Team Atlas",
+ "clause_type": "uncapped_liability",
+ "current_value": "true",
+ "confidence": 1.0,
+ "severity": "high",
+ "status": "overridden",
+ "updated_at": "2026-11-18 03:08:59.339083+00:00"
+}
+== 2_override_action
+{
+ "request": {
+  "function": "lakebase.override",
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped"
+ },
+ "response": {
+  "review_id": 37,
+  "reviewed_at": "2026-11-18T03:12:42.537458+00:00",
+  "old_value": "true",
+  "new_value": "false",
+  "status": "overridden",
+  "duration_ms": 22.97,
+  "dry_run": false
+ }
+}
+== 3_review_queue_after
+{
+ "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+ "current_value": "false",
+ "status": "overridden",
+ "updated_at": "2026-11-18 03:12:42.537458+00:00"
+}
+== 4_clause_reviews_after
+[
+ {
+  "review_id": 35,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "true",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped",
+  "reviewed_at": "2026-11-18 03:06:58.500566+00:00"
+ },
+ {
+  "review_id": 36,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "false",
+  "new_value": "true",
+  "comment": "Reset to AI-extracted value before re-running the Genie before/after demo",
+  "reviewed_at": "2026-11-18 03:08:59.339083+00:00"
+ },
+ {
+  "review_id": 37,
+  "clause_id": "aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "true",
+  "new_value": "false",
+  "comment": "Carve-outs are subject to the aggregate cap per side letter; liability is capped",
+  "reviewed_at": "2026-11-18 03:12:42.537458+00:00"
+ }
+]
+round trip rt-uncapped_liability-20261118-031242 clause aa0cec5435425d0bac3c2d5a2c8186f9d4ce6456f457d4cc7c1d3f0684e6fe7b
+
+=======
+Task sync_reviews_back:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 775 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 7 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 20 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 5 (latest reviews in Lakebase: 5) synced_at=2026-11-18 03:13:08.914149
+
+[2026-11-18T03:13:36Z] exit code: 0
+================================================================================
+[2026-11-18T03:14:43Z] Final - run matter_app (redeploy final source)
+$ databricks bundle run matter_app
+✓ Getting the status of the app matter-intel-reviewer
+✓ App is in RUNNING state
+✓ App compute is in ACTIVE state
+✓ Preparing source code for new app deployment.
+✓ Preparing source code for new app deployment.
+✓ Downloading source code from /Workspace/Users/12155ad4-fbf1-472a-8265-34a00751cc06/src/01f1e2fe346a10569a7f0c1655193535
+✓ App started successfully
+You can access the app at https://matter-intel-reviewer-7474658702717177.aws.databricksapps.com
+[2026-11-18T03:14:53Z] exit code: 0

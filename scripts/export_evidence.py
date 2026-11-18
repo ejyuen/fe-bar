@@ -294,7 +294,8 @@ FROM {CATALOG}.ml.eval_details WHERE mlflow_run_id = '{run_id}' GROUP BY 1 ORDER
 # ---------------------------------------------------------------- phase 3
 def lakebase_md():
     import subprocess
-    rt = sql(f"SELECT run_id FROM {CATALOG}.ml.roundtrip_evidence ORDER BY ts DESC LIMIT 1").iloc[0]["run_id"]
+    # main round trip = latest run that includes the latency probe (the Genie demo override skips it)
+    rt = sql(f"SELECT run_id FROM {CATALOG}.ml.roundtrip_evidence WHERE step = '5_latency_probe' ORDER BY ts DESC LIMIT 1").iloc[0]["run_id"]
     steps = sql(f"SELECT step_no, step, ts, payload FROM {CATALOG}.ml.roundtrip_evidence WHERE run_id = '{rt}' ORDER BY step_no")
     clause_id = json.loads(steps.iloc[0]["payload"])["clause_id"]
     out = header("05 - Lakebase review round trip")
@@ -364,6 +365,73 @@ FROM {CATALOG}.serving.pg_clause_reviews ORDER BY review_id""")
     write("07_app.md", out)
 
 
+# ---------------------------------------------------------------- phase 4
+def _rows_md(cols_json, rows_json, limit=15):
+    import pandas as pd
+    cols, rows = json.loads(cols_json or "[]"), json.loads(rows_json or "[]")
+    if not rows:
+        return "_(0 rows)_"
+    df = pd.DataFrame(rows, columns=cols if cols and len(cols) == len(rows[0]) else None)
+    return md(df.head(limit)) + (f"\n\n_... {len(rows) - limit} more rows_" if len(rows) > limit else "")
+
+
+def genie_md():
+    w = ws()
+    before = sql(f"SELECT run_id FROM {CATALOG}.ml.genie_validation WHERE tag = 'before' ORDER BY ts DESC LIMIT 1").iloc[0, 0]
+    after = sql(f"SELECT run_id FROM {CATALOG}.ml.genie_validation WHERE tag = 'after' ORDER BY ts DESC LIMIT 1")
+    after = after.iloc[0, 0] if not after.empty else None
+    v = sql(f"SELECT * FROM {CATALOG}.ml.genie_validation WHERE run_id IN ('{before}', '{after}') ORDER BY ts, q_no")
+    v["q_no"] = v["q_no"].astype(int)
+    space_id = os.environ.get("MI_GENIE_SPACE_ID", "01f1e2f665f81ba9aa29a999a763139c")
+    sp = w.genie.get_space(space_id)
+    b = v[v.run_id == before]
+    out = header("06 - Genie transcript and validation")
+    out += f"""Genie space `{sp.title}` (id `{sp.space_id}`, warehouse `{sp.warehouse_id}`), created by `src/genie/create_space.py`
+(8 tables incl. the query-time view `contract_terms_current`, text instructions from `src/genie/instructions.md`,
+9 curated example SQLs from `src/genie/example_queries.sql`). Questions asked through the Genie Conversation API by
+`src/genie/validate.py`; each answer is compared with a hand-written SQL result (same rows; Genie may add columns).
+
+**Validation run `{before}`: {int(b['pass'].map(lambda x: str(x).lower() == 'true').sum())}/{len(b)} PASS.**
+Q5-Q7 are phrased differently from the curated examples.
+
+| # | question | result | reason | Genie latency (s) |
+|---|---|---|---|---|
+"""
+    for r in b.itertuples():
+        out += f"| Q{r.q_no} | {r.question} | **{'PASS' if str(r._15).lower() == 'true' else 'FAIL'}** | {r.reason} | {r.genie_seconds} |\n"
+    out += "\n"
+    for r in b.itertuples():
+        out += (f"## Q{r.q_no}. {r.question}\n\nGenie conversation `{r.conversation_id}` message `{r.message_id}` "
+                f"status `{r.genie_status}`\n\n**Genie-generated SQL**\n\n```sql\n{r.genie_sql}\n```\n\n"
+                f"**Genie result**\n\n{_rows_md(r.genie_columns, r.genie_rows)}\n\n**Hand-written SQL**\n\n```sql\n{r.hand_sql}\n```\n\n"
+                f"**Hand-written result**\n\n{_rows_md(r.hand_columns, r.hand_rows)}\n\n"
+                f"**{'PASS' if str(r._15).lower() == 'true' else 'FAIL'}** - {r.reason}\n\n")
+    if after:
+        a = v[(v.run_id == after) & (v.q_no == 1)].iloc[0]
+        b1 = b[b.q_no == 1].iloc[0]
+        rt = sql(f"""SELECT run_id, step, ts, payload FROM {CATALOG}.ml.roundtrip_evidence
+                     WHERE run_id LIKE 'rt-uncapped_liability%' ORDER BY ts DESC LIMIT 4""").sort_values("ts")
+        out += "## Answer changed after a Lakebase override (demo steps 4-5)\n\n"
+        out += f"**Before** (`{before}`, {b1.ts} UTC): {_rows_md(b1.genie_columns, b1.genie_rows)}\n\n"
+        out += "**Override** in Lakebase via `override_demo_job` (same `lakebase.override()` the app's Override button calls), then `sync_reviews_back` MERGE into `gold_reviewed_clauses`:\n\n"
+        for r in rt.itertuples():
+            out += f"- `{r.step}` at {r.ts} UTC\n\n```json\n{r.payload[:1500]}\n```\n"
+        out += section("gold_reviewed_clauses row that contract_terms_current now prefers", f"""
+SELECT clause_type, extracted_value, reviewed_value, review_action, reviewer, reviewed_at, synced_at
+FROM {CATALOG}.curated.gold_reviewed_clauses WHERE clause_type = 'uncapped_liability'""")
+        out += (f"**After** (`{after}`, {a.ts} UTC): Genie SQL\n\n```sql\n{a.genie_sql}\n```\n\nGenie result: "
+                f"{_rows_md(a.genie_columns, a.genie_rows)}\n\nHand-written result: {_rows_md(a.hand_columns, a.hand_rows)}\n\n"
+                f"**{'PASS' if str(a['pass']).lower() == 'true' else 'FAIL'}** - {a.reason}. The overridden contract is no longer returned "
+                "because the reviewer's value (uncapped_liability = false) replaced the AI-extracted value.\n")
+    write("06_genie_transcript.md", out)
+
+
+def roi_md():
+    import roi_model
+    m, a, o = roi_model.compute()
+    write("roi_model.md", roi_model.to_markdown(m, a, o))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--phase", nargs="*", type=int, default=[1])
@@ -378,6 +446,9 @@ def main():
         eval_md()
     if 3 in a.phase:
         lakebase_md()
+    if 4 in a.phase:
+        genie_md()
+        roi_md()
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ KEY_CLAUSES = ["governing_law", "expiration_date", "auto_renewal", "notice_perio
 FUZZY_THRESHOLD = 85
 
 GROUNDEDNESS_INSTRUCTIONS = """You are auditing an AI-written contract risk explanation.
-The inputs contain the playbook rule, the clause type and the SOURCE SNIPPET copied from the contract.
+The inputs contain the playbook rule, the clause type and the SOURCE SNIPPET: the contract excerpt the AI was given.
 The outputs contain the explanation written by the AI.
 
 Inputs: {{ inputs }}
@@ -177,7 +177,8 @@ def main(argv=None):
     cost_per_1k = float(cost.v.iloc[0]) if not cost.empty else None
 
     # ------------------------------------------------ groundedness judge
-    flags = sql(f"""SELECT g.flag_id, g.rule_id, g.severity, g.clause_type, g.reason, i.source_snippet, g.explanation
+    flags = sql(f"""SELECT g.flag_id, g.rule_id, g.severity, g.clause_type, g.reason,
+                           coalesce(i.source_context, i.source_snippet) AS source_snippet, g.explanation
                     FROM {c}.curated.gold_risk_flags g JOIN {c}.curated.int_risk_flags i USING (flag_id)
                     WHERE g.explanation IS NOT NULL ORDER BY g.flag_id""")
     judge = __import__("mlflow.genai.judges", fromlist=["make_judge"]).make_judge(
