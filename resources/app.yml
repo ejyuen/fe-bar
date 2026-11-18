@@ -1,0 +1,30 @@
+resources:
+  apps:
+    matter_app:
+      name: matter-intel-reviewer
+      description: Matter Intelligence reviewer workbench (React + FastAPI)
+      source_code_path: ../src/app
+      config:
+        command: ["python", "main.py"]
+        env:
+          - name: DATABRICKS_WAREHOUSE_ID
+            value_from: sql-warehouse
+          - name: CATALOG
+            value: ${var.catalog}
+          - name: LAKEBASE_INSTANCE
+            value: ${var.lakebase_instance}
+          - name: PGDATABASE
+            value: databricks_postgres
+          - name: GENIE_SPACE_ID
+            value: ${var.genie_space_id}
+      user_api_scopes: ["sql", "dashboards.genie"]
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: lakebase
+          database:
+            instance_name: ${resources.database_instances.matter_lakebase.name}
+            database_name: databricks_postgres
+            permission: CAN_CONNECT_AND_CREATE

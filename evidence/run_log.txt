@@ -616,3 +616,282 @@ termination_for_convenience     yes_no   3   3   5   9   0.500000 0.375000 0.428
 
 [2026-11-18T00:14:54Z] exit code: 0
 [2026-11-18T00:18:36Z] [note] Phase 2: deleted ml.eval_results rows from earlier local eval attempts (judge calls failed on concurrent CLI OAuth refresh; groundedness not valid). Kept only the eval_job run 7afbcff99f564d3aaceed89d9fbc667e.
+================================================================================
+[2026-11-18T01:19:56Z] Phase 3 - validate
+$ databricks bundle validate
+Warning: Use 'value_from' instead of 'valueFrom'
+  at resources.apps.matter_app.config.env[0]
+  in resources/app.yml:11:13
+
+The field 'valueFrom' should be 'value_from' (snake_case). The 'valueFrom' field will be ignored.
+
+Name: matter-intelligence
+Target: dev
+Workspace:
+  Host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+  User: erica.yuen@databricks.com
+  Path: /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev
+
+Found 1 warning
+[2026-11-18T01:20:00Z] exit code: 0
+================================================================================
+[2026-11-18T01:20:07Z] Phase 3 - validate #2
+$ databricks bundle validate
+Name: matter-intelligence
+Target: dev
+Workspace:
+  Host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+  User: erica.yuen@databricks.com
+  Path: /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev
+
+Validation OK!
+[2026-11-18T01:20:08Z] exit code: 0
+================================================================================
+[2026-11-18T01:20:08Z] Phase 3 - deploy (Lakebase instance, app, Lakebase/sync/roundtrip jobs, serving view)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T01:20:52Z] exit code: 0
+================================================================================
+[2026-11-18T01:22:21Z] Phase 3 - run lakebase_job (pipeline refresh, synced table, review queue, grants)
+$ databricks bundle run lakebase_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/983465134822251/run/735233368905592
+
+2026-11-17 20:22:22 "[dev erica_yuen] matter-intelligence-lakebase-setup" RUNNING
+2026-11-17 20:25:28 "[dev erica_yuen] matter-intelligence-lakebase-setup" TERMINATED SUCCESS
+Lakebase instance matter-intel-lakebase: state=DatabaseInstanceState.AVAILABLE, capacity=CU_1
+schema.sql applied
+creating synced table serverless_stable_oj7eie_catalog.serving.review_queue_synced
+  synced table state: SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES (Synced table is currently pending setup of pipeline resources. Check latest status in Delta Live Tables: https://fevm-serverless-stable-oj7eie.cloud.databricks.com#joblist/pipelines/cfffefe6-6329-4b7c-bd43-71ddd1445d82/updates/20d71f90-261e-4fab-adf2-9f894f0b3e3f)
+  synced table state: SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT (Synced table is currently in the process of syncing initial data. Check latest status in Delta Live Tables: https://fevm-serverless-stable-oj7eie.cloud.databricks.com#joblist/pipelines/cfffefe6-6329-4b7c-bd43-71ddd1445d82/updates/20d71f90-261e-4fab-adf2-9f894f0b3e3f)
+  synced table state: SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE (Synced table creation succeeded using Delta Live Tables: https://fevm-serverless-stable-oj7eie.cloud.databricks.com#joblist/pipelines/cfffefe6-6329-4b7c-bd43-71ddd1445d82/updates/20d71f90-261e-4fab-adf2-9f894f0b3e3f.)
+  sync pipeline update 20d71f90-261e-4fab-adf2-9f894f0b3e3f: COMPLETED
+rows in Postgres serving.review_queue_synced: 166
+review_queue status counts after refresh: {'auto_accepted': 136, 'pending': 30}
+app matter-intel-reviewer: service principal 12155ad4-fbf1-472a-8265-34a00751cc06
+  [ok] GRANT USAGE ON SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA review TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USAGE ON SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT SELECT ON ALL TABLES IN SCHEMA serving TO "12155ad4-fbf1-472a-8265-34a00751cc06"
+  [ok] GRANT USE CATALOG ON CATALOG `serverless_stable_oj7eie_catalog` TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA, SELECT ON SCHEMA `serverless_stable_oj7eie_catalog`.curated TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+  [ok] GRANT USE SCHEMA ON SCHEMA `serverless_stable_oj7eie_catalog`.serving TO `12155ad4-fbf1-472a-8265-34a00751cc06`
+[2026-11-18T01:25:29Z] exit code: 0
+================================================================================
+[2026-11-18T01:27:40Z] Phase 3 - run matter_app (start + deploy app)
+$ databricks bundle run matter_app
+✓ Getting the status of the app matter-intel-reviewer
+✓ App is in UNAVAILABLE state
+✓ App compute is in STOPPED state
+✓ Starting the app matter-intel-reviewer
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is starting...
+✓ App is started!
+Error: Must specify environment variable source using either `value` or `valueFrom`.
+[2026-11-18T01:29:57Z] exit code: 1
+================================================================================
+[2026-11-18T01:30:12Z] Phase 3 - deploy (genie var default)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T01:30:21Z] exit code: 0
+================================================================================
+[2026-11-18T01:30:21Z] Phase 3 - run matter_app #2
+$ databricks bundle run matter_app
+✓ Getting the status of the app matter-intel-reviewer
+✓ App is in UNAVAILABLE state
+✓ App compute is in ACTIVE state
+✓ Preparing source code for new app deployment.
+✓ Preparing source code for new app deployment.
+✓ Downloading source code from /Workspace/Users/12155ad4-fbf1-472a-8265-34a00751cc06/src/01f1e2ef9ff51730922a31e759000303
+✓ Installing packages...
+✓ Starting app with command: streamlit run app.py --server.headless true
+✓ App started successfully
+You can access the app at https://matter-intel-reviewer-7474658702717177.aws.databricksapps.com
+[2026-11-18T01:30:40Z] exit code: 0
+================================================================================
+[2026-11-18T01:30:49Z] Phase 3 - run roundtrip_job (override via lakebase.override + sync back to Delta)
+$ databricks bundle run roundtrip_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/357814133651514/run/724423438953817
+
+2026-11-17 20:30:51 "[dev erica_yuen] matter-intelligence-review-roundtrip" RUNNING
+2026-11-17 20:32:13 "[dev erica_yuen] matter-intelligence-review-roundtrip" TERMINATED SUCCESS
+Output:
+=======
+Task roundtrip_override:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:34: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_id = datetime.datetime.utcnow().strftime("rt-%Y%m%d-%H%M%S")
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/roundtrip_demo.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ev.append((run_id, len(ev) + 1, step, datetime.datetime.utcnow(), json.dumps(payload, indent=1)))
+
+
+== 1_review_queue_before
+{
+ "clause_id": "74c1da82ee8ce1ca111ae11240f2c93fb9e365ea047da52da973aa1f88c95048",
+ "doc_id": "661d35cc01bcb542a595c245b317e8a4e508dfa62c32cee0125afae43d5d08f2",
+ "doc_title": "RESELLER AGREEMENT",
+ "contract_type": "Distribution",
+ "matter_team": "Team Denali",
+ "clause_type": "liability_cap",
+ "current_value": "Reseller not liable to Company except for willful misconduct or gross negligence",
+ "confidence": 0.85,
+ "severity": "none",
+ "status": "pending",
+ "updated_at": "2026-11-18 01:25:07.934395+00:00"
+}
+== 2_override_action
+{
+ "request": {
+  "function": "lakebase.override",
+  "clause_id": "74c1da82ee8ce1ca111ae11240f2c93fb9e365ea047da52da973aa1f88c95048",
+  "reviewer": "erica.yuen@databricks.com",
+  "new_value": "USD 1,000,000 aggregate cap (reviewer override)",
+  "comment": "Round-trip demo: cap confirmed with counterparty at USD 1M"
+ },
+ "response": {
+  "review_id": 1,
+  "reviewed_at": "2026-11-18T01:31:21.140677+00:00",
+  "old_value": "Reseller not liable to Company except for willful misconduct or gross negligence",
+  "new_value": "USD 1,000,000 aggregate cap (reviewer override)",
+  "status": "overridden",
+  "duration_ms": 22.49,
+  "dry_run": false
+ }
+}
+== 3_review_queue_after
+{
+ "clause_id": "74c1da82ee8ce1ca111ae11240f2c93fb9e365ea047da52da973aa1f88c95048",
+ "current_value": "USD 1,000,000 aggregate cap (reviewer override)",
+ "status": "overridden",
+ "updated_at": "2026-11-18 01:31:21.140677+00:00"
+}
+== 4_clause_reviews_after
+[
+ {
+  "review_id": 1,
+  "clause_id": "74c1da82ee8ce1ca111ae11240f2c93fb9e365ea047da52da973aa1f88c95048",
+  "reviewer": "erica.yuen@databricks.com",
+  "action": "override",
+  "old_value": "Reseller not liable to Company except for willful misconduct or gross negligence",
+  "new_value": "USD 1,000,000 aggregate cap (reviewer override)",
+  "comment": "Round-trip demo: cap confirmed with counterparty at USD 1M",
+  "reviewed_at": "2026-11-18 01:31:21.140677+00:00"
+ }
+]
+== 5_latency_probe
+{
+ "n": 30,
+ "p50_ms": 15.47,
+ "p95_ms": 18.77,
+ "max_ms": 23.82,
+ "target_p95_ms": 300,
+ "method": "approve() transaction (SELECT FOR UPDATE, INSERT review, UPDATE queue) rolled back"
+}
+round trip rt-20261118-013121 clause 74c1da82ee8ce1ca111ae11240f2c93fb9e365ea047da52da973aa1f88c95048
+
+=======
+Task sync_reviews_back:
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 166 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 1 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 1 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 1 (latest reviews in Lakebase: 1) synced_at=2026-11-18 01:31:50.277569
+
+[2026-11-18T01:32:14Z] exit code: 0
+================================================================================
+[2026-11-18T02:06:47Z] Phase 3 - deploy (React + FastAPI reviewer app)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T02:07:04Z] exit code: 0
+================================================================================
+[2026-11-18T02:07:04Z] Phase 3 - run matter_app (React + FastAPI)
+$ databricks bundle run matter_app
+✓ Getting the status of the app matter-intel-reviewer
+✓ App is in RUNNING state
+✓ App compute is in ACTIVE state
+✓ Preparing source code for new app deployment.
+✓ Preparing source code for new app deployment.
+✓ Downloading source code from /Workspace/Users/12155ad4-fbf1-472a-8265-34a00751cc06/src/01f1e2f4c0de1ee8b051c8ae6f81de8e
+✓ Starting app with command: python main.py
+✓ App started successfully
+You can access the app at https://matter-intel-reviewer-7474658702717177.aws.databricksapps.com
+[2026-11-18T02:07:18Z] exit code: 0
+================================================================================
+[2026-11-18T02:11:43Z] Phase 3 - run sync_job (Lakebase reviews -> Delta, after app usage)
+$ databricks bundle run sync_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/598209240763002/run/103706103547773
+
+2026-11-17 21:11:45 "[dev erica_yuen] matter-intelligence-sync-reviews" RUNNING
+2026-11-17 21:12:46 "[dev erica_yuen] matter-intelligence-sync-reviews" TERMINATED SUCCESS
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_review_queue: 166 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_clause_reviews: 4 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+pg_audit_log: 17 rows mirrored
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/lakebase/sync_reviews_back.py:38: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if pd.api.types.is_datetime64tz_dtype(df[c]):
+
+
+gold_reviewed_clauses rows: 4 (latest reviews in Lakebase: 4) synced_at=2026-11-18 02:12:08.463036
+[2026-11-18T02:12:47Z] exit code: 0

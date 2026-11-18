@@ -65,3 +65,65 @@ resources:
               - mlflow[databricks]>=3.5,<4
               - rapidfuzz>=3.9
               - databricks-sdk>=0.67
+
+    lakebase_job:
+      name: matter-intelligence-lakebase-setup
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: refresh_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.matter_pipeline.id}
+        - task_key: setup_synced_tables
+          depends_on: [{task_key: refresh_pipeline}]
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/setup_synced_tables.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--app_name", "${resources.apps.matter_app.name}", "--src_dir", "${workspace.file_path}/src"]
+      environments:
+        - environment_key: lakebase
+          spec:
+            environment_version: "4"
+            dependencies: ["psycopg[binary]>=3.2", "databricks-sdk>=0.67"]
+
+    sync_job:
+      name: matter-intelligence-sync-reviews
+      max_concurrent_runs: 1
+      schedule:
+        quartz_cron_expression: "0 0 2 * * ?"
+        timezone_id: UTC
+      tasks:
+        - task_key: sync_reviews_back
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/sync_reviews_back.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--src_dir", "${workspace.file_path}/src"]
+      environments:
+        - environment_key: lakebase
+          spec:
+            environment_version: "4"
+            dependencies: ["psycopg[binary]>=3.2", "databricks-sdk>=0.67"]
+
+    roundtrip_job:
+      name: matter-intelligence-review-roundtrip
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: roundtrip_override
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/roundtrip_demo.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--src_dir", "${workspace.file_path}/src"]
+        - task_key: sync_reviews_back
+          depends_on: [{task_key: roundtrip_override}]
+          environment_key: lakebase
+          spark_python_task:
+            python_file: ../src/lakebase/sync_reviews_back.py
+            parameters: ["--catalog", "${var.catalog}", "--instance", "${var.lakebase_instance}",
+                         "--src_dir", "${workspace.file_path}/src"]
+      environments:
+        - environment_key: lakebase
+          spec:
+            environment_version: "4"
+            dependencies: ["psycopg[binary]>=3.2", "databricks-sdk>=0.67"]

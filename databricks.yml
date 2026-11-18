@@ -17,8 +17,8 @@ variables:
     description: Lakebase (Postgres) database instance name
     default: matter-intel-lakebase
   genie_space_id:
-    description: Genie space id (filled in after src/genie/create_space.py runs)
-    default: ""
+    description: Genie space id (filled in after src/genie/create_space.py runs; "unset" = not configured)
+    default: unset
   doc_limit:
     description: Number of CUAD contracts to stage into the Volume
     default: 100

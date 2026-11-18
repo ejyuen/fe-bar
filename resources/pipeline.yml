@@ -33,3 +33,5 @@ resources:
             path: ../src/pipeline/gold_risk_flags.sql
         - file:
             path: ../src/pipeline/gold_cost_metrics.sql
+        - file:
+            path: ../src/pipeline/serving_review_queue.sql

@@ -56,6 +56,15 @@ NOTEBOOKS = {
         "sql(\"SELECT g.rule_id, left(g.explanation, 200) explanation, left(e.rationale, 220) rationale FROM ${catalog}.ml.eval_groundedness e JOIN ${catalog}.curated.gold_risk_flags g USING (flag_id) WHERE NOT e.grounded LIMIT 5\")",
         "sql(\"SELECT stage, docs, pages, input_tokens, output_tokens, est_cost_usd, cost_per_1k_docs FROM ${catalog}.curated.gold_cost_metrics ORDER BY stage\")",
     ]),
+    "04": ("04_lakebase_roundtrip.ipynb", "# 04 - Lakebase round trip\nSynced table -> review queue (routing rule) -> reviewer override -> clause_reviews -> synced back to Delta gold_reviewed_clauses. Postgres tables are read through their Delta mirrors written by the sync job.", [
+        "st = ws().database.get_synced_database_table(CATALOG + '.serving.review_queue_synced')\nprint(st.name, st.data_synchronization_status.detailed_state, st.spec.scheduling_policy, st.spec.source_table_full_name)\ninst = ws().database.get_database_instance('matter-intel-lakebase'); print(inst.name, inst.state, inst.capacity)",
+        "sql(\"SELECT initial_status, severity, count(*) n, round(min(confidence),2) min_conf FROM ${catalog}.serving.review_queue_source GROUP BY ALL ORDER BY 1,2\")",
+        "sql(\"SELECT status, count(*) n FROM ${catalog}.serving.pg_review_queue GROUP BY 1\")",
+        "rt = sql(\"SELECT run_id, step_no, step, ts, payload FROM ${catalog}.ml.roundtrip_evidence ORDER BY ts DESC LIMIT 5\").sort_values('step_no')\nfor r in rt.itertuples(): print(f'--- {r.step_no} {r.step} @ {r.ts}'); print(r.payload[:1200])",
+        "sql(\"SELECT * FROM ${catalog}.serving.pg_clause_reviews ORDER BY review_id\")",
+        "sql(\"SELECT clause_id, clause_type, extracted_value, reviewed_value, review_action, reviewer, reviewed_at, synced_at FROM ${catalog}.curated.gold_reviewed_clauses\")",
+        "sql(\"SELECT actor, action, count(*) n, round(percentile(duration_ms, 0.95),1) p95_ms FROM ${catalog}.serving.pg_audit_log GROUP BY ALL ORDER BY 1,2\")",
+    ]),
 }
 
 

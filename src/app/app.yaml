@@ -1,0 +1,14 @@
+# Databricks Apps runtime config. CATALOG / LAKEBASE_INSTANCE / GENIE_SPACE_ID are overridden per
+# target by the bundle (resources/app.yml `config`), so this file only carries local-dev defaults.
+command: ["python", "main.py"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: CATALOG
+    value: matter_intel
+  - name: LAKEBASE_INSTANCE
+    value: matter-intel-lakebase
+  - name: PGDATABASE
+    value: databricks_postgres
+  - name: GENIE_SPACE_ID
+    value: unset

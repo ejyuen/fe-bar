@@ -1,0 +1,5 @@
+resources:
+  database_instances:
+    matter_lakebase:
+      name: ${var.lakebase_instance}
+      capacity: CU_1

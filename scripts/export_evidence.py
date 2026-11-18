@@ -291,6 +291,79 @@ FROM {CATALOG}.ml.eval_details WHERE mlflow_run_id = '{run_id}' GROUP BY 1 ORDER
     print("wrote evidence/eval_results.json")
 
 
+# ---------------------------------------------------------------- phase 3
+def lakebase_md():
+    import subprocess
+    rt = sql(f"SELECT run_id FROM {CATALOG}.ml.roundtrip_evidence ORDER BY ts DESC LIMIT 1").iloc[0]["run_id"]
+    steps = sql(f"SELECT step_no, step, ts, payload FROM {CATALOG}.ml.roundtrip_evidence WHERE run_id = '{rt}' ORDER BY step_no")
+    clause_id = json.loads(steps.iloc[0]["payload"])["clause_id"]
+    out = header("05 - Lakebase review round trip")
+    out += ("Flow: Delta `serving.review_queue_source` (routing rule applied in the pipeline) -> Lakebase synced table "
+            "`serving.review_queue_synced` -> app-writable Postgres `review.review_queue` -> reviewer override "
+            "(`lakebase.override()`, the same function the app's **Override** button calls) writes "
+            "`review.clause_reviews` + `review.audit_log` and updates the queue -> `sync_reviews_back.py` (nightly "
+            "`sync_job`, also run as the second task of `roundtrip_job`) MERGEs into Delta `curated.gold_reviewed_clauses`.\n\n")
+    w = ws()
+    st = w.database.get_synced_database_table(f"{CATALOG}.serving.review_queue_synced")
+    ds = st.data_synchronization_status
+    inst = w.database.get_database_instance("matter-intel-lakebase")
+    out += f"""| item | value |
+|---|---|
+| Lakebase instance | `{inst.name}` state `{inst.state.value}` capacity `{inst.capacity}` |
+| Synced table | `{st.name}` state `{ds.detailed_state.value if ds and ds.detailed_state else ''}` policy `{st.spec.scheduling_policy.value if st.spec and st.spec.scheduling_policy else ''}` |
+| Synced table source | `{st.spec.source_table_full_name if st.spec else ''}` primary key `{st.spec.primary_key_columns if st.spec else ''}` |
+| Round-trip run | `{rt}` |
+
+"""
+    out += section("Routing rule check on the source (confidence >= 0.9 AND no high flag -> auto_accepted)", f"""
+SELECT initial_status, count(*) AS clauses,
+       count_if(confidence >= 0.9 AND severity <> 'high') AS meets_auto_rule,
+       count_if(NOT (confidence >= 0.9 AND severity <> 'high')) AS fails_auto_rule
+FROM {CATALOG}.serving.review_queue_source GROUP BY 1 ORDER BY 1""")
+    out += section("Postgres review.review_queue status counts (Delta mirror serving.pg_review_queue)", f"""
+SELECT status, count(*) AS clauses FROM {CATALOG}.serving.pg_review_queue GROUP BY 1 ORDER BY 1""")
+    out += "## Round-trip steps (recorded by roundtrip_demo.py at execution time)\n\n"
+    for r in steps.itertuples():
+        out += f"### Step {r.step_no}: {r.step}  ({r.ts} UTC)\n\n```json\n{r.payload}\n```\n\n"
+    out += section("Postgres clause_reviews for the clause (Delta mirror, synced by sync_reviews_back)", f"""
+SELECT review_id, clause_id, reviewer, action, old_value, new_value, comment, reviewed_at
+FROM {CATALOG}.serving.pg_clause_reviews WHERE clause_id = '{clause_id}' ORDER BY review_id""", max_col_chars=90)
+    out += section("Synced-back Delta row in curated.gold_reviewed_clauses (queried as admin)", f"""
+SELECT clause_id, clause_type, extracted_value, reviewed_value, review_action, reviewer, reviewed_at, synced_at, matter_team
+FROM {CATALOG}.curated.gold_reviewed_clauses WHERE clause_id = '{clause_id}'""", max_col_chars=90)
+    out += section("Round-trip timestamps", f"""
+SELECT (SELECT max(updated_at) FROM {CATALOG}.serving.pg_review_queue WHERE clause_id = '{clause_id}') AS lakebase_queue_updated_at,
+       (SELECT max(reviewed_at) FROM {CATALOG}.serving.pg_clause_reviews WHERE clause_id = '{clause_id}') AS lakebase_reviewed_at,
+       (SELECT max(synced_at) FROM {CATALOG}.curated.gold_reviewed_clauses WHERE clause_id = '{clause_id}') AS delta_synced_at""")
+    out += section("Row filters on gold tables incl. gold_reviewed_clauses (information_schema.row_filters)", f"""
+SELECT table_schema, table_name, filter_name, target_columns FROM {CATALOG}.information_schema.row_filters ORDER BY table_name""")
+    write("05_lakebase_roundtrip.md", out)
+
+    # ---- 07 app
+    out = header("07 - Databricks App (reviewer workbench)")
+    r = subprocess.run(["databricks", "apps", "get", "matter-intel-reviewer", "-o", "json"], capture_output=True, text=True)
+    app = json.loads(r.stdout)
+    keep = {k: app.get(k) for k in ("name", "url", "app_status", "compute_status", "compute_size", "user_api_scopes",
+                                    "effective_user_api_scopes", "service_principal_name", "create_time", "update_time")}
+    keep["resources"] = app.get("resources")
+    keep["active_deployment"] = {k: (app.get("active_deployment") or {}).get(k) for k in ("deployment_id", "status", "create_time", "source_code_path")}
+    out += "### `databricks apps get matter-intel-reviewer -o json` (selected fields)\n\n```json\n" + json.dumps(keep, indent=2) + "\n```\n\n"
+    out += ("Auth model: SQL reads run on-behalf-of the signed-in user (`user_api_scopes: sql, dashboards.genie`) so UC row "
+            "filters / masks apply; Lakebase reads/writes use the app service principal via the `lakebase` app resource; "
+            "the warehouse is the `sql-warehouse` app resource. No secrets in code.\n\n")
+    out += section("App actions by actor (review.audit_log, Delta mirror serving.pg_audit_log)", f"""
+SELECT actor, action, count(*) AS events, min(ts) AS first_ts, max(ts) AS last_ts,
+       round(percentile(duration_ms, 0.95), 1) AS p95_duration_ms
+FROM {CATALOG}.serving.pg_audit_log GROUP BY ALL ORDER BY actor, action""")
+    out += section("Latest 25 audit_log events", f"""
+SELECT id, actor, action, entity, left(entity_id, 16) AS entity_id, left(details, 120) AS details, round(duration_ms, 1) AS duration_ms, ts
+FROM {CATALOG}.serving.pg_audit_log ORDER BY id DESC LIMIT 25""")
+    out += section("Reviewer actions made in the app (clause_reviews mirror)", f"""
+SELECT review_id, reviewer, action, left(old_value, 60) AS old_value, left(new_value, 60) AS new_value, comment, reviewed_at
+FROM {CATALOG}.serving.pg_clause_reviews ORDER BY review_id""")
+    write("07_app.md", out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--phase", nargs="*", type=int, default=[1])
@@ -303,6 +376,8 @@ def main():
         governance_md(a.skip_restricted)
     if 2 in a.phase:
         eval_md()
+    if 3 in a.phase:
+        lakebase_md()
 
 
 if __name__ == "__main__":
