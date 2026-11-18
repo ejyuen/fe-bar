@@ -422,3 +422,197 @@ Task uc_governance_post:
     -> [RequestId=4406e48f-f151-4cb3-9500-84f65eb6fe68 ErrorClass=PRINCIPAL_DOES_NOT_EXIST.PRINCIPAL_DOES_NOT_EXIST] Could not find principal with name legal_reviewers_full.
 
 [2026-11-17T20:20:10Z] exit code: 0
+================================================================================
+[2026-11-18T00:09:44Z] Phase 2 - validate
+$ databricks bundle validate
+Name: matter-intelligence
+Target: dev
+Workspace:
+  Host: https://fevm-serverless-stable-oj7eie.cloud.databricks.com
+  User: erica.yuen@databricks.com
+  Path: /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev
+
+Validation OK!
+[2026-11-18T00:09:46Z] exit code: 0
+================================================================================
+[2026-11-18T00:09:46Z] Phase 2 - deploy (eval job)
+$ databricks bundle deploy
+Uploading bundle files to /Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files...
+Deploying resources...
+Updating deployment state...
+Deployment complete!
+[2026-11-18T00:09:57Z] exit code: 0
+================================================================================
+[2026-11-18T00:09:57Z] Phase 2 - run eval_job (CUAD ground truth + extraction eval + groundedness judge)
+$ databricks bundle run eval_job
+Run URL: https://fevm-serverless-stable-oj7eie.cloud.databricks.com/?o=7474658702717177#job/798406412670485/run/605925826314266
+
+2026-11-17 19:09:59 "[dev erica_yuen] matter-intelligence-eval" RUNNING
+2026-11-17 19:14:52 "[dev erica_yuen] matter-intelligence-eval" TERMINATED SUCCESS
+Output:
+=======
+Task build_eval_set:
+                clause_type      basis docs gt_present
+     assignment_restriction     yes_no   20         16
+               auto_renewal span_proxy   20          7
+             effective_date       span   20         14
+                exclusivity     yes_no   20          7
+            expiration_date       span   20         17
+              governing_law       span   20         19
+              liability_cap     yes_no   20         11
+                non_compete     yes_no   20          9
+         notice_period_days       span   20          3
+                    parties       span   20         20
+               renewal_term       span   20          7
+termination_for_convenience     yes_no   20          8
+         uncapped_liability     yes_no   20          7
+
+=======
+Task run_eval:
+[1;38;5;208mIf you are using MLflow Tracing, you can migrate your traces to Unity Catalog for unlimited storage, fine-grained access controls, and queryability from notebooks, SQL, and dashboards. [94mLearn more: https://docs.databricks.com/aws/en/mlflow3/genai/tracing/migrate-traces-to-uc[0m
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/eval/run_eval.py:195: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  run_name = f"eval-{model_name}-{datetime.datetime.utcnow():%Y%m%d-%H%M%S}"
+Unexpected status resolving file endpoints (403, request ID 6ff1b9e9-70d7-4ee6-acb3-bc156902962e), using the default endpoints.
+2026/11/18 00:11:33 INFO mlflow.genai.utils.data_validation: Testing model prediction with the first sample in the dataset. To disable this check, set the MLFLOW_GENAI_EVAL_SKIP_TRACE_VALIDATION environment variable to True.
+
+
+Evaluating:   0%|          | 0/30 [Elapsed: 00:00, Remaining: ?]
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Evaluation output</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            a.button {
+                padding: 4px 8px;
+                line-height: 20px;
+                box-shadow: none;
+                height: 20px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                vertical-align: middle;
+                background-color: rgb(34, 114, 180);
+                color: rgb(255, 255, 255);
+                text-decoration: none;
+                animation-duration: 0s;
+                transition: none 0s ease 0s;
+                position: relative;
+                white-space: nowrap;
+                text-align: center;
+                border: 1px solid rgb(192, 205, 216);
+                cursor: pointer;
+                user-select: none;
+                touch-action: manipulation;
+                border-radius: 4px;
+                gap: 6px;
+            }
+
+            a.button:hover {
+                background-color: rgb(14, 83, 139) !important;
+                border-color: transparent !important;
+                color: rgb(255, 255, 255) !important;
+            }
+        }
+
+        .warnings-section {
+            margin-top: 8px;
+
+            ul {
+                list-style-type: none;
+            }
+        }
+
+        .instructions-section {
+            margin-top: 16px;
+            font-size: 14px;
+
+            ul {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        }
+
+        code {
+            font-family: monospace;
+        }
+
+        .note {
+            color: #666;
+        }
+
+        a {
+            color: #2272B4;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #005580;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="header">
+        <a href="https://fevm-serverless-stable-oj7eie.cloud.databricks.com/ml/experiments/702680364159558/evaluation-runs?selectedRunUuid=7afbcff99f564d3aaceed89d9fbc667e" class="button">
+            View evaluation results in MLflow
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 16 16" aria-hidden="true" focusable="false" class="">
+                <path fill="currentColor" d="M10 1h5v5h-1.5V3.56L8.53 8.53 7.47 7.47l4.97-4.97H10z"></path>
+                <path fill="currentColor" d="M1 2.75A.75.75 0 0 1 1.75 2H8v1.5H2.5v10h10V8H14v6.25a.75.75 0 0 1-.75.75H1.75a.75.75 0 0 1-.75-.75z"></path>
+            </svg>
+        </a>
+    </div>
+</div>
+</body>
+</html>
+
+
+judge rows: 30, failed after retry: 0
+
+
+/Workspace/Users/erica.yuen@databricks.com/.bundle/matter-intelligence/dev/files/src/eval/run_eval.py:248: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+                clause_type      basis  tp  fp  fn  tn  precision   recall       f1  value_compared  exact_match_rate  fuzzy_match_rate
+     assignment_restriction     yes_no  15   1   1   3   0.937500 0.937500 0.937500               0               NaN               NaN
+               auto_renewal span_proxy   4   0   3  13   1.000000 0.571429 0.727273               0               NaN               NaN
+             effective_date       span  13   5   1   1   0.722222 0.928571 0.812500              13               1.0          1.000000
+                exclusivity     yes_no   6   4   1   9   0.600000 0.857143 0.705882               0               NaN               NaN
+            expiration_date       span  10   2   7   1   0.833333 0.588235 0.689655              10               0.9          0.900000
+              governing_law       span  17   0   2   1   1.000000 0.894737 0.944444              17               1.0          1.000000
+              liability_cap     yes_no   7   1   4   8   0.875000 0.636364 0.736842               0               NaN               NaN
+                non_compete     yes_no   6   2   3   9   0.750000 0.666667 0.705882               0               NaN               NaN
+         notice_period_days       span   3   2   0  15   0.600000 1.000000 0.750000               3               1.0          1.000000
+                    parties       span  20   0   0   0   1.000000 1.000000 1.000000              20               0.0          0.900000
+               renewal_term       span   7   1   0  12   0.875000 1.000000 0.933333               6               0.0          0.833333
+termination_for_convenience     yes_no   3   3   5   9   0.500000 0.375000 0.428571               0               NaN               NaN
+         uncapped_liability     yes_no   4   2   3  11   0.666667 0.571429 0.615385               0               NaN               NaN
+{
+  "experiment": "/Users/erica.yuen@databricks.com/matter-intelligence-eval",
+  "experiment_id": "702680364159558",
+  "run_id": "7afbcff99f564d3aaceed89d9fbc667e",
+  "micro_precision": 0.8333333333333334,
+  "micro_recall": 0.7931034482758621,
+  "micro_f1": 0.812720848056537,
+  "macro_f1": 0.7682514255819887,
+  "key_clause_precision": 0.8653846153846154,
+  "key_clause_recall": 0.703125,
+  "key_clause_f1": 0.7758620689655172,
+  "cost_per_1k_docs_usd": 119.34,
+  "judged_explanations": 30,
+  "judge_failures": 0,
+  "judge_retried_ok": 0,
+  "groundedness": 0.6333333333333333
+}
+
+[2026-11-18T00:14:54Z] exit code: 0
+[2026-11-18T00:18:36Z] [note] Phase 2: deleted ml.eval_results rows from earlier local eval attempts (judge calls failed on concurrent CLI OAuth refresh; groundedness not valid). Kept only the eval_job run 7afbcff99f564d3aaceed89d9fbc667e.

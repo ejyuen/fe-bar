@@ -38,3 +38,30 @@ resources:
             environment_version: "4"
             dependencies:
               - faker==37.4.0
+
+    eval_job:
+      name: matter-intelligence-eval
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: build_eval_set
+          environment_key: eval
+          spark_python_task:
+            python_file: ../src/eval/build_eval_set.py
+            parameters: ["--catalog", "${var.catalog}", "--warehouse_id", "${var.warehouse_id}",
+                         "--src_dir", "${workspace.file_path}/src/eval"]
+        - task_key: run_eval
+          depends_on: [{task_key: build_eval_set}]
+          environment_key: eval
+          spark_python_task:
+            python_file: ../src/eval/run_eval.py
+            parameters: ["--catalog", "${var.catalog}", "--warehouse_id", "${var.warehouse_id}",
+                         "--src_dir", "${workspace.file_path}/src/eval",
+                         "--experiment", "/Users/${workspace.current_user.userName}/matter-intelligence-eval"]
+      environments:
+        - environment_key: eval
+          spec:
+            environment_version: "4"
+            dependencies:
+              - mlflow[databricks]>=3.5,<4
+              - rapidfuzz>=3.9
+              - databricks-sdk>=0.67

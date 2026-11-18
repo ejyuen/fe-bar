@@ -218,6 +218,79 @@ FROM {CATALOG}.curated.gold_risk_flags GROUP BY ALL ORDER BY severity, rule_id""
     write("03_sample_outputs.md", out)
 
 
+# ---------------------------------------------------------------- phase 2
+def latest_eval_run():
+    df = sql(f"SELECT mlflow_run_id, mlflow_experiment_id, max(eval_ts) ts FROM {CATALOG}.ml.eval_results GROUP BY ALL ORDER BY ts DESC LIMIT 1")
+    return df.iloc[0]["mlflow_run_id"], df.iloc[0]["mlflow_experiment_id"], df.iloc[0]["ts"]
+
+
+def eval_md():
+    sys.path.insert(0, os.path.join(ROOT, "src", "eval"))
+    from build_eval_set import MAPPING  # noqa: E402
+    import pandas as pd
+    run_id, exp_id, ts = latest_eval_run()
+    w = ws()
+    run = w.experiments.get_run(run_id).run
+    exp = w.experiments.get_experiment(exp_id).experiment
+    per = sql(f"""SELECT clause_type, basis, tp, fp, fn, tn, round(precision, 3) precision, round(recall, 3) recall, round(f1, 3) f1,
+                         value_compared, round(exact_match_rate, 3) exact_match, round(fuzzy_match_rate, 3) fuzzy_match
+                  FROM {CATALOG}.ml.eval_results WHERE mlflow_run_id = '{run_id}' AND clause_type <> '__summary__' ORDER BY clause_type""")
+    summ = sql(f"""SELECT metric_name, round(metric_value, 4) value FROM {CATALOG}.ml.eval_results
+                   WHERE mlflow_run_id = '{run_id}' AND clause_type = '__summary__' ORDER BY metric_name""")
+    sm = {r.metric_name: (None if r.value is None else float(r.value)) for r in summ.itertuples()}
+    params = {p.key: p.value for p in (run.data.params or [])}
+    mlflow_metrics = {m.key: m.value for m in (run.data.metrics or [])}
+
+    out = header("04 - Evaluation results (CUAD ground truth)")
+    out += f"""| item | value |
+|---|---|
+| MLflow experiment | `{exp.name}` (id `{exp_id}`) |
+| MLflow run | `{run.info.run_name}` (id `{run_id}`), status `{run.info.status.value}` |
+| Eval timestamp (UTC) | {ts} |
+| Extraction model | `{params.get('extract_model')}` (one ai_extract v2.1 call per document) |
+| Judge model | `{params.get('judge_model')}` |
+| Documents evaluated | {params.get('docs')} |
+| **Micro F1 (all mapped clause types)** | **{sm.get('micro_f1'):.3f}** (P {sm.get('micro_precision'):.3f} / R {sm.get('micro_recall'):.3f}) |
+| Macro F1 | {sm.get('macro_f1'):.3f} |
+| **Key-clause F1** (governing_law, expiration_date, auto_renewal, notice_period_days, liability_cap, uncapped_liability) | **{sm.get('key_clause_f1'):.3f}** (P {sm.get('key_clause_precision'):.3f} / R {sm.get('key_clause_recall'):.3f}) |
+| **Explanation groundedness (LLM judge)** | **{sm.get('groundedness'):.3f}** over {int(sm.get('judged_explanations') or 0)} high/medium explanations, {int(sm.get('judge_failures') or 0)} judge failures |
+| **Estimated cost per 1K docs** | **${sm.get('cost_per_1k_docs_usd'):.2f}** (from gold_cost_metrics; chars/4 token estimate, illustrative prices) |
+
+MLflow metrics read back from the run via the Experiments API: `micro_f1={mlflow_metrics.get('micro_f1')}`, `groundedness={mlflow_metrics.get('groundedness')}`, `key_clause_f1={mlflow_metrics.get('key_clause_f1')}`, `cost_per_1k_docs_usd={mlflow_metrics.get('cost_per_1k_docs_usd')}`.
+
+## CUAD -> clause_type mapping
+
+"""
+    out += md(pd.DataFrame(MAPPING, columns=["clause_type", "cuad_category", "cuad_answer_column", "basis"])) + "\n\n"
+    out += ("`span` = CUAD experts highlighted a clause span; `yes_no` = the CUAD Answer column is Yes; `span_proxy` = "
+            "CUAD has no auto-renewal label, so presence of a Renewal Term span is used as a proxy. `indemnification` has "
+            "no CUAD category and is not evaluated. Presence for boolean clause types counts only `true` predictions.\n\n")
+    out += "## Per-clause presence precision / recall / F1 and value match\n\n" + md(per) + "\n\n"
+    out += ("Value match is computed only where both CUAD and the model have a value and the CUAD answer is comparable "
+            "(dates parsed, notice periods converted to days, text normalised; fuzzy = rapidfuzz token_set_ratio >= 85). "
+            "`parties` exact match is 0 by construction: CUAD answers list parties with role labels "
+            "(e.g. `Name (\"Company\")`) while the model returns `Name; Name`.\n\n")
+    out += section("Groundedness verdicts", f"""
+SELECT grounded, count(*) AS explanations FROM {CATALOG}.ml.eval_groundedness WHERE mlflow_run_id = '{run_id}' GROUP BY 1""")
+    out += section("Examples of explanations the judge marked NOT grounded (with judge rationale)", f"""
+SELECT g.rule_id, g.severity, left(g.explanation, 260) AS explanation, left(e.rationale, 300) AS judge_rationale
+FROM {CATALOG}.ml.eval_groundedness e JOIN {CATALOG}.curated.gold_risk_flags g USING (flag_id)
+WHERE e.mlflow_run_id = '{run_id}' AND NOT e.grounded ORDER BY g.rule_id LIMIT 6""", max_col_chars=320)
+    out += section("Largest misses: false negatives / false positives by clause type", f"""
+SELECT clause_type, count_if(gt_present AND NOT pred_present) AS false_negatives,
+       count_if(pred_present AND NOT gt_present) AS false_positives
+FROM {CATALOG}.ml.eval_details WHERE mlflow_run_id = '{run_id}' GROUP BY 1 ORDER BY false_negatives + false_positives DESC""")
+    write("04_eval_results.md", out)
+    payload = {"generated_at": now(), "workspace": w.config.host, "catalog": CATALOG,
+               "mlflow_experiment": {"id": exp_id, "name": exp.name},
+               "mlflow_run": {"id": run_id, "name": run.info.run_name, "status": run.info.status.value},
+               "params": params, "summary": sm,
+               "per_clause": json.loads(per.to_json(orient="records"))}
+    with open(os.path.join(EVID, "eval_results.json"), "w") as f:
+        json.dump(payload, f, indent=2)
+    print("wrote evidence/eval_results.json")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--phase", nargs="*", type=int, default=[1])
@@ -228,6 +301,8 @@ def main():
         pipeline_md()
         samples_md()
         governance_md(a.skip_restricted)
+    if 2 in a.phase:
+        eval_md()
 
 
 if __name__ == "__main__":

@@ -46,6 +46,16 @@ NOTEBOOKS = {
         "sql(\"SELECT rule_id, severity, left(explanation, 300) explanation FROM ${catalog}.curated.gold_risk_flags WHERE explanation IS NOT NULL LIMIT 5\")",
         "sql(\"SELECT * FROM ${catalog}.curated.gold_cost_metrics ORDER BY run_id, stage\")",
     ]),
+    "03": ("03_eval.ipynb", "# 03 - Evaluation\nExtraction quality vs CUAD v1 expert labels and LLM-judged groundedness of risk explanations. The eval itself runs as the bundle job `eval_job` (serverless); this notebook reads the logged results from Unity Catalog and the MLflow run.", [
+        "sql(\"SELECT clause_type, basis, count(*) docs, count_if(gt_present) gt_present FROM ${catalog}.ml.eval_ground_truth GROUP BY ALL ORDER BY 1\")",
+        "from export_evidence import latest_eval_run\nrun_id, exp_id, ts = latest_eval_run(); print('MLflow experiment', exp_id, '| run', run_id, '| at', ts)\nrun = ws().experiments.get_run(run_id).run\nprint(run.info.run_name, run.info.status)\npd.DataFrame([(m.key, m.value) for m in run.data.metrics if '.' not in m.key], columns=['metric','value']).sort_values('metric')",
+        "sql(f\"SELECT clause_type, tp, fp, fn, round(precision,3) p, round(recall,3) r, round(f1,3) f1, value_compared, round(exact_match_rate,3) exact, round(fuzzy_match_rate,3) fuzzy FROM {CATALOG}.ml.eval_results WHERE mlflow_run_id = '{run_id}' AND clause_type <> '__summary__' ORDER BY f1\")",
+        "sql(f\"SELECT metric_name, round(metric_value,4) value FROM {CATALOG}.ml.eval_results WHERE mlflow_run_id = '{run_id}' AND clause_type = '__summary__' ORDER BY 1\")",
+        "sql(\"SELECT clause_type, gt_answer, predicted_value, exact_match, fuzzy_match FROM ${catalog}.ml.eval_details WHERE clause_type IN ('governing_law','expiration_date','notice_period_days') AND exact_match IS NOT NULL ORDER BY clause_type LIMIT 15\")",
+        "sql(\"SELECT grounded, count(*) n FROM ${catalog}.ml.eval_groundedness GROUP BY 1\")",
+        "sql(\"SELECT g.rule_id, left(g.explanation, 200) explanation, left(e.rationale, 220) rationale FROM ${catalog}.ml.eval_groundedness e JOIN ${catalog}.curated.gold_risk_flags g USING (flag_id) WHERE NOT e.grounded LIMIT 5\")",
+        "sql(\"SELECT stage, docs, pages, input_tokens, output_tokens, est_cost_usd, cost_per_1k_docs FROM ${catalog}.curated.gold_cost_metrics ORDER BY stage\")",
+    ]),
 }
 
 
